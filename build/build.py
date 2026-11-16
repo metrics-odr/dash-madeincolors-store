@@ -430,9 +430,9 @@ def load_media(rows, ch):
         day = parse_date(cell(row, midx["day"]))
         if not day:
             continue
-        camp = cell(row, midx["campaign"]) or "(sem campanha)"
-        adset = cell(row, midx["adset"]) or "(sem conjunto)"
-        ad = cell(row, midx["ad"]) or "(sem anúncio)"
+        camp = cell(row, midx["campaign"]) or "(no campaign)"
+        adset = cell(row, midx["adset"]) or "(no ad group)"
+        ad = cell(row, midx["ad"]) or "(no ad)"
         link = cell(row, midx["link"])
         if link and ad not in ad_links:
             ad_links[ad] = link
@@ -454,7 +454,7 @@ def load_media(rows, ch):
             # conversões do Google vêm fracionadas (atribuição por modelo): compras são sempre inteiras -> arredonda por linha
             rec["pu"] = to_float(cell(row, midx["pu"]))
             rec["pr"] = round(to_float(cell(row, midx["pr"])), 2)
-            rec["kw"] = _clean_kw(cell(row, midx["kw"])) or "(sem palavra-chave)"
+            rec["kw"] = _clean_kw(cell(row, midx["kw"])) or "(no keyword)"
         for k in ("vv3", "vv50", "vv95"):
             v = to_float(cell(row, midx[k]))
             if v:
@@ -536,8 +536,8 @@ def load_ga4_sales(rows):
         ch = classify_channel(src, med)
         sg = classify_source(src, med, ch)
         n = to_float(cell(row, gidx["count"])) or to_float(cell(row, gidx["sessions"]))
-        a = acc.setdefault((d, ch, sg), {"d": d, "ch": ch, "src": sg, "camp": "(GA4)", "adset": "(sem conjunto)",
-                                         "ad": "(sem anúncio)", "prod": "—", "main": 0, "val": 0.0, "n": 0, "ga": 1})
+        a = acc.setdefault((d, ch, sg), {"d": d, "ch": ch, "src": sg, "camp": "(GA4)", "adset": "(no ad group)",
+                                         "ad": "(no ad)", "prod": "—", "main": 0, "val": 0.0, "n": 0, "ga": 1})
         a["main"] += n
         a["n"] += n
     return sorted(acc.values(), key=lambda r: (r["d"], r["ch"], r["src"]))
@@ -573,11 +573,11 @@ def load_sales(rows, media):
                 break
     camp_map, ad_map, adname_map, gadset_map = {}, {}, {}, {}
     for m in media:
-        if m["ch"] == "google" and m["adset"] != "(sem conjunto)":
+        if m["ch"] == "google" and m["adset"] != "(no ad group)":
             # Google: utm_medium costuma carregar o Ad Group Name ({adgroupname}) -> (campanha, ad group) reais
             gadset_map.setdefault((norm(m["camp"]), norm(m["adset"])), m["adset"])
             gadset_map.setdefault(("", norm(m["adset"])), set()).add((m["camp"], m["adset"]))
-        if m["ch"] == "meta" and m["ad"] != "(sem anúncio)":
+        if m["ch"] == "meta" and m["ad"] != "(no ad)":
             adname_map.setdefault(norm(m["ad"]), set()).add((m["camp"], m["adset"]))
         k = norm(m["camp"])
         if k in camp_map and camp_map[k][0] != m["ch"]:
@@ -604,7 +604,7 @@ def load_sales(rows, media):
             ch = classify_channel(src, med)
             sg = classify_source(src, med, ch)
             utm_camp, utm_ad = _clean_utm(cell(row, sidx["utm_campaign"])), _clean_utm(cell(row, sidx["utm_content"]))
-            camp = utm_camp or "(sem campanha)"
+            camp = utm_camp or "(no campaign)"
             hit = camp_map.get(norm(utm_camp)) if utm_camp else None
             if hit and hit[0]:
                 ch, camp = hit[0], hit[1]          # campanha real da plataforma manda no canal
@@ -630,11 +630,11 @@ def load_sales(rows, media):
                         if len(cands) == 1:
                             camp, adset = next(iter(cands))
             order_attr[oid] = {"d": parse_date(cell(row, sidx["created"])), "ch": ch, "src": sg, "camp": camp,
-                               "adset": adset or "(sem conjunto)",
+                               "adset": adset or "(no ad group)",
                                # utm_content só identifica anúncio no Meta (no Google costuma ser posicionamento/link)
-                               "ad": (utm_ad if ch == "meta" else "") or "(sem anúncio)",
+                               "ad": (utm_ad if ch == "meta" else "") or "(no ad)",
                                # utm_term = palavra-chave ({keyword}) só nas compras do Google Ads
-                               "kw": (_clean_kw(cell(row, sidx["utm_term"])) or "(sem palavra-chave)") if ch == "google" else ""}
+                               "kw": (_clean_kw(cell(row, sidx["utm_term"])) or "(no keyword)") if ch == "google" else ""}
         at = order_attr[oid]
         prod = cell(row, sidx["prod"]) or "—"
         val = to_float(cell(row, sidx["val"]))
@@ -707,9 +707,9 @@ def load_geo(rows, ch):
             continue
         out.append({"d": (parse_date(cell(row, gidx["day"])) if gidx["day"] is not None else None) or "",
                     "ch": ch, "src": "google" if ch == "gshop" else ch,
-                    "country": cell(row, gidx["country"]) or "(não identificado)",
-                    "region": cell(row, gidx["region"]) or "(não identificada)",
-                    "city": cell(row, gidx["city"]) or "(não identificada)",
+                    "country": cell(row, gidx["country"]) or "(not identified)",
+                    "region": cell(row, gidx["region"]) or "(not identified)",
+                    "city": cell(row, gidx["city"]) or "(not identified)",
                     "sp": round(sp, 4), "im": im, "cl": cl})
     return out
 
@@ -729,7 +729,7 @@ def load_google_shop(rows, existing):
         elif k in have:
             skipped.setdefault(m["camp"], "já existe na aba geral do Google")
         else:
-            m["adset"], m["ad"] = "(Shopping/PMax)", "(sem anúncio)"   # soma ao canal Google Ads (página única, como no dash da Maya)
+            m["adset"], m["ad"] = "(Shopping/PMax)", "(no ad)"   # soma ao canal Google Ads (página única, como no dash da Maya)
             out.append(m)
     for c, why in skipped.items():
         print(f"  google shop/pmax: ignorada '{c}' ({why})", file=sys.stderr)
@@ -831,7 +831,8 @@ def render(data, template_path):
         tpl = f.read()
     styles = readf("identidade-visual.css") + "\n" + readf("estilos.css")
     tpl = tpl.replace("__STYLES__", styles)
-    tpl = tpl.replace("__APP_JS__", readf("app.js"))
+    # mapa-europa.js (EU_MAP) entra logo após o "use strict" de app.js (mapa de gasto por país)
+    tpl = tpl.replace("__APP_JS__", readf("app.js").replace('"use strict";', '"use strict";\n' + readf("mapa-europa.js"), 1))
     # logo da sidebar/favicon: arquivo de imagem embutido em base64 (data URI) — build/logo.png
     logo_uri = ""
     logo_path = os.path.join(base, LOGO_FILE) if LOGO_FILE else ""

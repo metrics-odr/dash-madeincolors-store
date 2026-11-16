@@ -9,29 +9,29 @@
 /* creme #F5F3F0 + dourado-bronze (botões/links) + verde-floresta; sidebar preta como o header do site */
 :root{
   --text-primary:#141414; --bg:#F5F3F0; --surface:#FFFFFF; --border:#E3DED6;
-  --muted:#7A746A; --ink:#1A1A1A; --selected:#EFE6D2;
-  --accent-blue:#8F7842; --accent-blue-light:#F1EADA;
-  --good:#2E7D55; --bad:#C2453C; --yellow:#C9972B; --aqua:#2F6B52; --red:#C2453C; --black:#141414;
+  --muted:#7A746A; --ink:#1A1A1A; --selected:#E6EFE9;
+  --accent-blue:#A68F5B; --accent-blue-light:#F4EFE4;
+  --good:#2F5D45; --bad:#B5473E; --yellow:#A68F5B; --aqua:#2F5D45; --red:#B5473E; --black:#141414;
   --grid:#ECE7DF; --thead:#F0EBE2; --tfoot:#EAE3D7;
   /* séries de gráfico (paleta) */
-  --c1:#8F7842; --c2:#2E7D55; --c3:#C9972B; --c4:#3F6F8F; --c5:#C2453C;
-  --c6:#6B9080; --c7:#A5673F; --c8:#4A4A4A; --c9:#B9A36B; --c10:#5E8C61;
-  --cc1:#8F7842; --cc2:#2E7D55; --cc3:#C9972B; --cc4:#3F6F8F; --cc5:#C2453C;
-  --cc6:#6B9080; --cc7:#A5673F; --cc8:#4A4A4A; --cc9:#B9A36B; --cc10:#5E8C61;
+  --c1:#2F5D45; --c2:#A68F5B; --c3:#1A1A1A; --c4:#6B9A7F; --c5:#B5473E;
+  --c6:#C9B98A; --c7:#555555; --c8:#8FB8A0; --c9:#7C6C44; --c10:#3F6F8F;
+  --cc1:#2F5D45; --cc2:#A68F5B; --cc3:#1A1A1A; --cc4:#6B9A7F; --cc5:#B5473E;
+  --cc6:#C9B98A; --cc7:#555555; --cc8:#8FB8A0; --cc9:#7C6C44; --cc10:#3F6F8F;
   /* linhas semânticas dos gráficos */
-  --chart-vendas:#8F7842; --chart-gasto:#C2453C; --chart-faturamento:#2E7D55;
-  --chart-cpm:#C2453C; --chart-ctr:#8F7842; --chart-cr:#8F7842;
-  --chart-vischk:#2E7D55; --chart-convlp:#C9972B;
+  --chart-vendas:#2F5D45; --chart-gasto:#B5473E; --chart-faturamento:#2F5D45;
+  --chart-cpm:#B5473E; --chart-ctr:#A68F5B; --chart-cr:#2F5D45;
+  --chart-vischk:#6B9A7F; --chart-convlp:#A68F5B;
   /* heatmap por coluna */
-  --heat-gasto:#C2453C; --heat-fat:#2E7D55; --heat-roas:#C9972B; --heat-vendas:#8F7842;
+  --heat-gasto:#B5473E; --heat-fat:#2F5D45; --heat-roas:#A68F5B; --heat-vendas:#2F5D45;
   /* tags/pills de valor */
-  --pill-cac:#7A6535; --pill-cac-bg:rgba(143,120,66,.12);
+  --pill-cac:#2F5D45; --pill-cac-bg:rgba(47,93,69,.12);
   --pill-roas:#B7791F; --pill-roas-bg:rgba(183,121,31,.12);
   /* indicativo ativo/pausado */
-  --status-active:#2E7D55; --status-active-glow:rgba(46,125,85,.45);
-  --nav-active-bg:rgba(46,110,76,.38);
+  --status-active:#2F5D45; --status-active-glow:rgba(47,93,69,.45);
+  --nav-active-bg:rgba(47,93,69,.55);
   /* tons dos cards-chave do funil (Gasto/Compras/Faturamento/ROAS) */
-  --tone-red:#C2453C; --tone-blue:#3F6F8F; --tone-green:#2E7D55; --tone-yellow:#B8861F;
+  --tone-red:#B5473E; --tone-blue:#3F6F8F; --tone-green:#2F5D45; --tone-yellow:#A68F5B;
 }
 
 /* ------------------------------ TEMA ESCURO (padrão) ----------------------- */
@@ -56,19 +56,19 @@
   --tfoot:#262626;
   --tone-red:#E8645A; --tone-blue:#6FA8D0; --tone-green:#4FBF86; --tone-yellow:#E3B74A;
   /* PALETA base p/ bordas do funil */
-  --c1:#B79F66; --c2:#4FBF86; --c3:#E3B74A; --c4:#6FA8D0; --c5:#E8645A;
-  --c6:#8FBFA9; --c7:#D18A5E; --c8:#B9B4AA; --c9:#D8C48D; --c10:#7FBF7F;
+  --c1:#4E9A74; --c2:#B79F66; --c3:#F5F3F0; --c4:#8FBFA9; --c5:#E8645A;
+  --c6:#D8C48D; --c7:#9A958B; --c8:#6FA8D0; --c9:#7C6C44; --c10:#C9B98A;
   /* PALETA dos GRÁFICOS — até 10 séries */
-  --cc1:#B79F66; --cc2:#4FBF86; --cc3:#E3B74A; --cc4:#6FA8D0; --cc5:#E8645A;
-  --cc6:#8FBFA9; --cc7:#D18A5E; --cc8:#B9B4AA; --cc9:#D8C48D; --cc10:#7FBF7F;
+  --cc1:#4E9A74; --cc2:#B79F66; --cc3:#F5F3F0; --cc4:#8FBFA9; --cc5:#E8645A;
+  --cc6:#D8C48D; --cc7:#9A958B; --cc8:#6FA8D0; --cc9:#7C6C44; --cc10:#C9B98A;
   /* linhas semânticas dos gráficos */
-  --chart-vendas:#B79F66; --chart-gasto:#E8645A; --chart-faturamento:#4FBF86;
-  --chart-cpm:#E3B74A; --chart-ctr:#8FBFA9; --chart-cr:#B79F66;
-  --chart-vischk:#4FBF86; --chart-convlp:#E3B74A;
+  --chart-vendas:#4E9A74; --chart-gasto:#E8645A; --chart-faturamento:#4E9A74;
+  --chart-cpm:#E8645A; --chart-ctr:#B79F66; --chart-cr:#4E9A74;
+  --chart-vischk:#8FBFA9; --chart-convlp:#B79F66;
   /* heatmap por coluna */
-  --heat-gasto:#E8645A; --heat-fat:#4FBF86; --heat-roas:#E3B74A; --heat-vendas:#B79F66;
+  --heat-gasto:#E8645A; --heat-fat:#4E9A74; --heat-roas:#B79F66; --heat-vendas:#4E9A74;
   /* tags/pills de valor */
-  --pill-cac:#D8C48D; --pill-cac-bg:rgba(183,159,102,.16);
+  --pill-cac:#8FBFA9; --pill-cac-bg:rgba(78,154,116,.18);
   --pill-roas:#FBBF24; --pill-roas-bg:rgba(251,191,36,.14);
   /* indicativo ativo/pausado */
   --status-active:#4FBF86; --status-active-glow:rgba(79,191,134,.55);

@@ -23,7 +23,7 @@ Objetivo: o usuário ver a alteração publicada no navegador o quanto antes. Nu
 |-----|-----|-----|
 | Google Ads — Campanhas · Grupos · Palavras-chave | 888044421 | página **Google Ads** (Day · Campaign · Ad Group · Ad Name · Cost · Impressions · Clicks · Conversions · Keyword) |
 | Google Ads — Shopping e PMax | 1783811121 | soma na **mesma página Google Ads** (grupo "(Shopping/PMax)"). A aba traz também campanhas de pesquisa: **são excluídas** (só entram nomes que casam `GOOGLE_SHOP_PATTERN` e que não estejam na aba geral) |
-| Google Ads — Gasto por localização | 1126389235 | seção **Gasto por localização** (País · Região · Cidade) na Visão Geral |
+| Google Ads — Gasto por localização | 1126389235 | seção **Spend by location** na Visão Geral: mapa da Europa por país + tabela País/Região/Cidade |
 | GA4 | 1669456740 | funil por sessões (page_view → view_item → add_to_cart → begin_checkout) e **compras** (evento `purchase`) |
 
 | Compras (aba "Compras") | 1836439885 | **Compras** = Order IDs distintos · **Faturamento** = soma do `Price` (€) · país/produto/UTM. Alimenta Visão Geral, Faturamento, ROAS, Ticket e "Compras por produto" |
@@ -44,7 +44,8 @@ build/config.py            # ⭐ CONFIG DO CLIENTE (gids, moeda, nome, páginas 
 build/template.html        # esqueleto HTML
 build/identidade-visual.css# ⭐ TODAS as cores — paleta do site: preto-carvão, verde-floresta, dourado-bronze, creme
 build/estilos.css          # layout/componentes
-build/app.js               # lógica + renderização (tudo roda no navegador)
+build/app.js               # lógica + renderização (tudo roda no navegador). Interface 100% em INGLÊS (formato en-GB, moeda €)
+build/mapa-europa.js       # EU_MAP (gerado por build/tools/gerar_mapa_europa.py) — mapa de gasto por país na Visão Geral
 build/logo.png             # logo (embutido na sidebar e no favicon via LOGO_FILE)
 build/gerar_relatorios.py  # métricas p/ Insights (workflow 23:50 BRT)
 .github/workflows/deploy.yml  # build + GitHub Pages (push em build/**, cron */30 e workflow_dispatch)
@@ -61,3 +62,7 @@ Teste local: `python build/build.py --google-file g.csv --google-shop-file gs.cs
 - `workflow_dispatch`/cron-job.org só funcionam com o workflow na `main`.
 - O sandbox do agente não alcança a API de Settings do Actions/Pages; o Pages liga sozinho via `configure-pages` (`enablement: true`).
 - Token do cron-job.org: nunca commitar (ver `SETUP-CRON.md`).
+
+## Identidade visual
+Paleta do site (print do cliente): preto-carvão, verde-floresta, dourado do botão e creme. Não inventar cores fora disso — editar só `build/identidade-visual.css`.
+Orçamento ("Goals & budget") é dividido por **fonte de tráfego**: Google Ads, Meta Ads, TikTok Ads.

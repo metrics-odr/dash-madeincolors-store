@@ -149,7 +149,7 @@ def period_metrics(media, ga, sales, a, b, tax):
         camps.append({"canal": ch, "nome": name, **pack(derive(bk))})
     ads = []
     for (ch, camp, name), bk in by_key(media, sales, a, b, lambda x: (x["ch"], x["camp"], x["ad"]), tax).items():
-        if bk["sp"] <= 0 or name == "(sem anúncio)":
+        if bk["sp"] <= 0 or name == "(no ad)":
             continue
         d = derive(bk)
         ads.append({"nome": name, "canal": ch, "campanha": camp, "gasto": r(d["gasto"], 2),
