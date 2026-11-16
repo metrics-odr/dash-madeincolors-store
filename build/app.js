@@ -2,7 +2,7 @@
 const DATA = JSON.parse(document.getElementById('payload').textContent);
 const MEDIA = DATA.media, GA = DATA.ga, SALES = DATA.sales, BUYERS = DATA.buyers || [], B = DATA.build;
 const TAX = B.tax_factor || 1;
-const MAIN_PRODUCT = B.main_product || 'Todos os produtos';
+const MAIN_PRODUCT = B.main_product || 'All products';
 /* Canais: Meta/Google/TikTok = mídia paga (gasto vem das abas de mídia); "outros" = orgânico/
    direto/etc. (só entra na Visão Geral). A separação usa Session source/medium (GA4) e
    utm_source/utm_medium (Compras) — ver classify_channel() em build/build.py. */
@@ -12,13 +12,13 @@ const CUR = B.currency||'R$';
 /* sem aba Compras/valor de conversão não há faturamento: Faturamento/ROAS/Ticket viram '-' em vez de 0 */
 const HAS_REV = !!B.has_revenue;
 const REV = v => HAS_REV ? v : null;
-const CH_LABEL = {meta:'Meta Ads', google:'Google Ads', gshop:'Google Shopping/PMax', tiktok:'TikTok Ads', instagram_org:'Instagram Org', gpt:'ChatGPT Org', google_org:'Google Org', direto:'Direto', outros:'Outros'};
+const CH_LABEL = {meta:'Meta Ads', google:'Google Ads', gshop:'Google Shopping/PMax', tiktok:'TikTok Ads', instagram_org:'Instagram Org', gpt:'ChatGPT Org', google_org:'Google Org', direto:'Direct', outros:'Other'};
 
 /* ---------------- format ---------------- */
-const nf0=new Intl.NumberFormat('pt-BR',{maximumFractionDigits:0});
-const nf1=new Intl.NumberFormat('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1});
-const nf2=new Intl.NumberFormat('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
-const brl=v=>(v==null||!isFinite(v))?'-':CUR+' '+nf2.format(v);
+const nf0=new Intl.NumberFormat('en-GB',{maximumFractionDigits:0});
+const nf1=new Intl.NumberFormat('en-GB',{minimumFractionDigits:1,maximumFractionDigits:1});
+const nf2=new Intl.NumberFormat('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});
+const brl=v=>(v==null||!isFinite(v))?'-':CUR+nf2.format(v);
 const pct=v=>(v==null||!isFinite(v))?'-':nf2.format(v*100)+'%';
 const intf=v=>(v==null||!isFinite(v))?'-':nf0.format(v);
 const numf=v=>(v==null||!isFinite(v))?'-':nf1.format(v);
@@ -27,7 +27,7 @@ const dimf=v=>v==null?'-':String(v);
 /* remove acentos p/ casar com o norm() do build.py (unicodedata NFKD) */
 const norm=s=>(s==null?'':String(s)).normalize('NFKD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase();
 const brdate=d=>{ if(!d) return '-'; const p=d.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; };
-const WD=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const weekday=d=>{ const dt=new Date(d+'T00:00:00'); return isNaN(dt)?'':WD[dt.getDay()]; };
 
 /* ---------------- date helpers ---------------- */
@@ -101,15 +101,15 @@ function daily(fS,fM,fG){
 const inRange=(d,a,b)=>d&&d>=a&&d<=b;
 
 /* Granularidade dos gráficos de evolução: agrega as linhas diárias em semana/mês/trimestre/semestre/ano. */
-const GRANS=[['dia','Diário','diária'],['semana','Semanal','semanal'],['mes','Mensal','mensal'],['tri','Trimestral','trimestral'],['sem','Semestral','semestral'],['ano','Anual','anual']];
+const GRANS=[['dia','Daily','daily'],['semana','Weekly','weekly'],['mes','Monthly','monthly'],['tri','Quarterly','quarterly'],['sem','Half-yearly','half-yearly'],['ano','Yearly','yearly']];
 function granKey(d,g){
   const y=+d.slice(0,4), m=+d.slice(5,7), yy=d.slice(2,4);
   if(g==='semana'){ const dt=new Date(d+'T00:00:00Z'); dt.setUTCDate(dt.getUTCDate()-(dt.getUTCDay()+6)%7); const s=dt.toISOString().slice(0,10);
     const th=new Date(dt); th.setUTCDate(th.getUTCDate()+3); const wy=th.getUTCFullYear();
-    const wk=Math.ceil(((th-Date.UTC(wy,0,1))/86400000+1)/7); return [s,'Semana '+wk+'/'+String(wy).slice(2)]; }
+    const wk=Math.ceil(((th-Date.UTC(wy,0,1))/86400000+1)/7); return [s,'Week '+wk+'/'+String(wy).slice(2)]; }
   if(g==='mes') return [d.slice(0,7), MONTHS_PT[m-1]+'/'+yy];
-  if(g==='tri'){ const q=Math.ceil(m/3); return [y+'-'+q, q+'º Trimestre/'+yy]; }
-  if(g==='sem'){ const h=m<=6?1:2; return [y+'-'+h, h+'º Semestre/'+yy]; }
+  if(g==='tri'){ const q=Math.ceil(m/3); return [y+'-'+q, 'Q'+q+'/'+yy]; }
+  if(g==='sem'){ const h=m<=6?1:2; return [y+'-'+h, 'H'+h+'/'+yy]; }
   return [String(y), String(y)];
 }
 function rollup(dd,g){
@@ -152,8 +152,8 @@ function scopeData(ch, ex, win, gf){
 
 /* Filtros da Visão Geral: Tráfego (Pago = mídia paga · Orgânico = o resto) e Canal (utm_source).
    Linhas de mídia não têm `src`: valem o próprio canal pago. */
-const G_TRAF=[['todos','Todos'],['pago','Pago'],['organico','Orgânico']];
-const G_SRC=[['todos','Todos'],['meta','Meta Ads'],['google','Google Ads'],['instagram_org','Instagram Org'],['gpt','ChatGPT Org'],['google_org','Google Org'],['direto','Direto'],['outros','Outros']];
+const G_TRAF=[['todos','All'],['pago','Paid'],['organico','Organic']];
+const G_SRC=[['todos','All'],['meta','Meta Ads'],['google','Google Ads'],['instagram_org','Instagram Org'],['gpt','ChatGPT Org'],['google_org','Google Org'],['direto','Direct'],['outros','Other']];
 function geralMatch(r){
   const paid=PAID.includes(r.ch);
   if(STATE.gTraf==='pago' && !paid) return false;
@@ -177,7 +177,7 @@ function renderGeralFilters(){
 function renderGranDD(chartId){
   const el=document.getElementById(chartId+'Gran'); if(!el) return;
   const cur=GRANS.find(g=>g[0]===STATE.gran[chartId])||GRANS[0];
-  const title=document.getElementById(chartId+'Title'); if(title) title.textContent='Evolução '+cur[2];
+  const title=document.getElementById(chartId+'Title'); if(title) title.textContent=cur[1]+' trend';
   el.innerHTML=`<button type="button" class="btn gf-btn" aria-haspopup="true" aria-expanded="false"><span>${cur[1]}</span><span class="period-caret">▾</span></button>`+
     `<div class="gf-menu" hidden>${GRANS.map(g=>`<button type="button" class="pp-preset${cur[0]===g[0]?' active':''}" data-v="${g[0]}">${g[1]}</button>`).join('')}</div>`;
   const btn=el.querySelector('.gf-btn'), menu=el.querySelector('.gf-menu');
@@ -226,7 +226,7 @@ function renderTable(cfg){
   let tfoot='';
   if(cfg.total){ tfoot='<tfoot><tr>'+cfg.cols.map((c,i)=>{
     const v=cfg.total[c.key], dl=c.delta&&cfg.totalPrev?deltaBadge(v,cfg.totalPrev[c.key],c.key):'';
-    const txt=i===0?(v==null?'Total Geral':fmt(c.type,v)):fmt(c.type,v);
+    const txt=i===0?(v==null?'Grand total':fmt(c.type,v)):fmt(c.type,v);
     return `<td class="${c.type==='dim'?'dim':''}">${dl?`<span class="mv">${txt}${dl}</span>`:txt}</td>`;
   }).join('')+'</tr></tfoot>'; }
   table.style.width=cfg.fit?'100%':totalW+'px';
@@ -297,18 +297,18 @@ function comboChart(id, d){
   const labels=d.map(x=>x.lbl), mut=cmuted(), gr=cgrid();
   charts[id]=new Chart(el,{
     data:{labels, datasets:[
-      {type:'bar',label:'Compras',data:d.map(x=>x.vendas),backgroundColor:cvar('--chart-vendas'),yAxisID:'y',borderRadius:3,order:3},
-      {type:'line',label:'Gasto',data:d.map(x=>+x.sp.toFixed(2)),borderColor:cvar('--chart-gasto'),backgroundColor:cvar('--chart-gasto'),yAxisID:'y3',borderWidth:2,pointRadius:2,tension:.25,order:2},
-      {type:'line',label:'Faturamento',data:d.map(x=>HAS_REV?+x.fat.toFixed(2):null),borderColor:cvar('--chart-faturamento'),backgroundColor:cvar('--chart-faturamento'),yAxisID:'y1',borderWidth:2,pointRadius:2,tension:.25,order:2},
+      {type:'bar',label:'Purchases',data:d.map(x=>x.vendas),backgroundColor:cvar('--chart-vendas'),yAxisID:'y',borderRadius:3,order:3},
+      {type:'line',label:'Spend',data:d.map(x=>+x.sp.toFixed(2)),borderColor:cvar('--chart-gasto'),backgroundColor:cvar('--chart-gasto'),yAxisID:'y3',borderWidth:2,pointRadius:2,tension:.25,order:2},
+      {type:'line',label:'Revenue',data:d.map(x=>HAS_REV?+x.fat.toFixed(2):null),borderColor:cvar('--chart-faturamento'),backgroundColor:cvar('--chart-faturamento'),yAxisID:'y1',borderWidth:2,pointRadius:2,tension:.25,order:2},
       {type:'line',label:'ROAS',data:d.map(x=>x.sp?+(x.fat/x.sp).toFixed(2):null),borderColor:cink(),backgroundColor:cink(),yAxisID:'y2',borderWidth:2,pointRadius:2,spanGaps:true,tension:.25,order:0},
     ]},
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
       plugins:{legend:{labels:{color:cink(),boxWidth:10,usePointStyle:true,font:{size:11}}},
         tooltip:{callbacks:{label:c=>{const v=c.raw,ax=c.dataset.yAxisID; return c.dataset.label+': '+(ax==='y1'||ax==='y3'?brl(v):ax==='y2'?roasf(v):intf(v));}}}},
       scales:{x:{ticks:{color:mut,font:{size:10}},grid:{display:false}},
-        y:{position:'left',ticks:{color:mut,font:{size:10}},grid:{color:gr},beginAtZero:true,title:{display:true,text:'Compras',color:mut,font:{size:10}}},
-        y1:{position:'right',ticks:{color:mut,font:{size:10}},grid:{display:false},beginAtZero:true,title:{display:true,text:'Faturamento '+CUR,color:mut,font:{size:10}}},
-        y3:{position:'right',ticks:{color:cvar('--chart-gasto')||mut,font:{size:10},callback:v=>brl(v)},grid:{display:false},beginAtZero:true,title:{display:true,text:'Gasto '+CUR,color:cvar('--chart-gasto')||mut,font:{size:10}}},
+        y:{position:'left',ticks:{color:mut,font:{size:10}},grid:{color:gr},beginAtZero:true,title:{display:true,text:'Purchases',color:mut,font:{size:10}}},
+        y1:{position:'right',ticks:{color:mut,font:{size:10}},grid:{display:false},beginAtZero:true,title:{display:true,text:'Revenue '+CUR,color:mut,font:{size:10}}},
+        y3:{position:'right',ticks:{color:cvar('--chart-gasto')||mut,font:{size:10},callback:v=>brl(v)},grid:{display:false},beginAtZero:true,title:{display:true,text:'Spend '+CUR,color:cvar('--chart-gasto')||mut,font:{size:10}}},
         y2:{position:'right',ticks:{color:mut,font:{size:10},callback:v=>numf(v)+'x'},grid:{display:false},beginAtZero:true,title:{display:true,text:'ROAS',color:mut,font:{size:10}}}}}
   });
 }
@@ -371,7 +371,7 @@ function cacDimChart(id, fM, fS, dim, selSet){
 /* ---------------- colunas das tabelas ---------------- */
 /* Tabela diária (nível canal/geral): funil completo, vindo do GA4 */
 const METRIC_COLS=[
-  {key:'gasto',label:'Gasto',type:'brl',heat:'gasto'},   /* heatmap vermelho */
+  {key:'gasto',label:'Spend',type:'brl',heat:'gasto'},   /* heatmap vermelho */
   {key:'cpm',label:'CPM',type:'brl'},
   {key:'ctr',label:'CTR',type:'pct'},
   {key:'cr',label:'CR',type:'pct'},
@@ -379,27 +379,27 @@ const METRIC_COLS=[
   {key:'acr',label:'ACR',type:'pct'},
   {key:'vischk',label:'VisCHK',type:'pct'},
   {key:'convchk',label:'ConvCHK',type:'pct'},
-  {key:'vendas',label:'Compras',type:'int',heat:'vendas'}, /* heatmap azul */
+  {key:'vendas',label:'Purchases',type:'int',heat:'vendas'}, /* heatmap azul */
   {key:'cac',label:'CAC',type:'brl'},
-  {key:'fat',label:'Faturamento',type:'brl',heat:'fat'},  /* heatmap verde */
+  {key:'fat',label:'Revenue',type:'brl',heat:'fat'},  /* heatmap verde */
   {key:'ticket',label:'Ticket',type:'brl'},
   {key:'roas',label:'ROAS',type:'roas',heat:'roas'},      /* heatmap amarelo */
 ];
 /* Campanha/Conjunto/Anúncio: o GA4 não traz esses níveis, então só mídia + compras atribuídas por UTM */
 const OPT_COLS=[
-  {key:'gasto',label:'Gasto',type:'brl',heat:'gasto'},
+  {key:'gasto',label:'Spend',type:'brl',heat:'gasto'},
   {key:'impr',label:'Impr.',type:'int'},
   {key:'cpm',label:'CPM',type:'brl'},
-  {key:'cliques',label:'Cliques',type:'int'},
+  {key:'cliques',label:'Clicks',type:'int'},
   {key:'cpc',label:'CPC',type:'brl'},
   {key:'ctr',label:'CTR',type:'pct'},
-  {key:'vendas',label:'Compras',type:'int',heat:'vendas'},
+  {key:'vendas',label:'Purchases',type:'int',heat:'vendas'},
   {key:'cac',label:'CAC',type:'brl'},
-  {key:'fat',label:'Faturamento',type:'brl',heat:'fat'},
+  {key:'fat',label:'Revenue',type:'brl',heat:'fat'},
   {key:'ticket',label:'Ticket',type:'brl'},
   {key:'roas',label:'ROAS',type:'roas',heat:'roas'},
 ];
-const DAILY_COLS=[{key:'date',label:'Data',type:'date'},{key:'wd',label:'Dia',type:'dim',w:64}].concat(METRIC_COLS);
+const DAILY_COLS=[{key:'date',label:'Date',type:'date'},{key:'wd',label:'Day',type:'dim',w:64}].concat(METRIC_COLS);
 /* Meta Ads: ordem de análise do funil (Checkouts/CPIC depois do ConvCHK, Ticket no fim) */
 const META_DAILY_COLS=(()=>{ const by={}; METRIC_COLS.forEach(c=>by[c.key]=c);
   by.ck={key:'ck',label:'Checkouts',type:'int'}; by.cpic={key:'cpic',label:'CPIC',type:'brl'};
@@ -422,8 +422,8 @@ function renderProdTable(id, salesSet){
   salesSet.forEach(r=>{ const a=by[r.prod]||(by[r.prod]={n:0,v:0}); a.n+=r.n; a.v+=r.val; totN+=r.n; totV+=r.val; });
   const rows=Object.entries(by).sort((a,b)=>b[1].v-a[1].v).map(([prod,a])=>
     ({k:prod, cells:{prod:prod, itens:a.n, fat:a.v, ticket:a.n?a.v/a.n:null, pctf:totV?a.v/totV:null}}));
-  renderTable({id, fit:true, cols:[{key:'prod',label:'Produto',type:'dim',w:190},{key:'itens',label:'Itens',type:'int',w:46},
-      {key:'fat',label:'Faturamento',type:'brl',w:96},{key:'ticket',label:'Ticket',type:'brl',w:80},{key:'pctf',label:'% Fat.',type:'pct',w:60}],
+  renderTable({id, fit:true, cols:[{key:'prod',label:'Product',type:'dim',w:190},{key:'itens',label:'Items',type:'int',w:46},
+      {key:'fat',label:'Revenue',type:'brl',w:96},{key:'ticket',label:'Ticket',type:'brl',w:80},{key:'pctf',label:'% Rev.',type:'pct',w:60}],
     rows, total:{prod:null,itens:totN,fat:totV,ticket:totN?totV/totN:null,pctf:totV?1:null}});
 }
 
@@ -445,7 +445,7 @@ function deltaBadge(cur,prev,key){
   return `<span class="delta ${cls}">${arrow} ${nf1.format(Math.abs(p))}%</span>`;
 }
 /* variação por canal (tabela "Resultado por canal"): mesmo cálculo, mas das células já derivadas */
-function chanCells(x,dv){ return {gasto:dv.gasto,cliques:x.cl,pv:x.pv,ck:x.ck,vendas:x.vendas,cac:dv.cac,fat:REV(x.fat),ticket:dv.ticket,roas:dv.roas};
+function chanCells(x,dv){ return {gasto:dv.gasto,cliques:x.cl,pv:x.pv,vi:x.vi,atc:x.atc,ck:x.ck,vendas:x.vendas,cac:dv.cac,fat:REV(x.fat),ticket:dv.ticket,roas:dv.roas};
 }
 /* sparkline (SVG) da série diária de uma etapa; sem dados suficientes -> vazio.
    dates/fmt alimentam o tooltip ao passar o mouse (ver initSparkTip) */
@@ -501,7 +501,7 @@ function paceIdeal(ch){
   const spent=MEDIA.reduce((a,r)=>a+((ch?r.ch===ch:PAID.includes(r.ch))&&r.d&&r.d.slice(0,7)===ym&&r.d<TODAY?r.sp*(r.ch==='meta'?TAX:1):0),0);
   let v=Math.max(0,alloc-spent)/days;
   const mgr=ch==='meta'&&TAX!==1; if(mgr) v/=TAX;
-  return {v, tip:`Verba ${brl(alloc)} − gasto até ontem ${brl(spent)} ÷ ${days} dia(s) restante(s)`+(mgr?' · valor sem imposto, para inserir no gerenciador':ch?'':' · com imposto do Meta')};
+  return {v, tip:`Budget ${brl(alloc)} − spend through yesterday ${brl(spent)} ÷ ${days} remaining day(s)`+(mgr?' · amount without tax, to enter in the ads manager':ch?'':' · including Meta tax')};
 }
 /* funil horizontal: KPIs (Gasto/Faturamento/ROAS/Ticket) + etapas em linha, com a taxa de conversão entre elas */
 function renderFunnel(id, steps, dd){
@@ -517,9 +517,9 @@ function renderFunnel(id, steps, dd){
   const kpi=(label,val,key,delta,cls,tone,extra)=>`<div class="fk${tone?' tint t-'+tone:''}"><div class="fk-label">${label}</div><div class="fk-val ${cls||''}">${val}</div>${extra||''}${delta?`<div class="m-delta">${delta}</div>`:''}${sp(key)}</div>`;
   const g=st.gasto, f=st.fat, roas=sec(f,0), tick=sec(f,1);
   const pace=paceIdeal(id==='geralFunnel'?null:STATE.page);
-  const paceHtml=pace?`<div class="fk-pace" title="${pace.tip}">Pace ideal: <b>${brl(pace.v)}</b>/dia</div>`:'';
-  const kpis=kpi('Gasto total',g[1],'gasto',g[5],'','red',paceHtml)+kpi('Faturamento',f[1],'fat',f[5],'','green')
-    +kpi('ROAS',roas[1],'roas','','roas-v','yellow')+kpi('Ticket médio',tick[1],'ticket');
+  const paceHtml=pace?`<div class="fk-pace" title="${pace.tip}">Ideal pace: <b>${brl(pace.v)}</b>/day</div>`:'';
+  const kpis=kpi('Total spend',g[1],'gasto',g[5],'','red',paceHtml)+kpi('Revenue',f[1],'fat',f[5],'','green')
+    +kpi('ROAS',roas[1],'roas','','roas-v','yellow')+kpi('Average ticket',tick[1],'ticket');
   const order=['impr','cl','pv','vi','atc','ck','vendas'];
   const stepsHtml=order.map((k,i)=>{
     const s=st[k], cost=sec(s,0), rate=sec(s,1);
@@ -534,15 +534,15 @@ function funnelSteps(t, tp, noGA){
   const d=derive(t), P=(k)=>tp?tp[k]:null, Pd=tp?derive(tp):null, dl=(cur,prev,key)=>deltaBadge(cur,prev,key);
   const G=(v,fn)=>noGA?'—':fn(v), S=(v,fn)=>noGA?'—':fn(v);
   return [
-    ['Gasto Total', brl(d.gasto), [], 'gasto', '--heat-gasto', dl(d.gasto, Pd?Pd.gasto:null, 'gasto')],
-    ['Impressões', intf(t.im), [['CPM',brl(d.cpm)]], 'impr', '--c6', dl(t.im, P('im'), 'im')],
-    ['Cliques', intf(t.cl), [['CPC',brl(d.cpc)],['CTR',pct(d.ctr)]], 'cl', '--c1', dl(t.cl, P('cl'), 'cl')],
+    ['Total spend', brl(d.gasto), [], 'gasto', '--heat-gasto', dl(d.gasto, Pd?Pd.gasto:null, 'gasto')],
+    ['Impressions', intf(t.im), [['CPM',brl(d.cpm)]], 'impr', '--c6', dl(t.im, P('im'), 'im')],
+    ['Clicks', intf(t.cl), [['CPC',brl(d.cpc)],['CTR',pct(d.ctr)]], 'cl', '--c1', dl(t.cl, P('cl'), 'cl')],
     ['Page Views', G(t.pv,intf), [['CPV',S(d.cpv,brl)],['CR',S(d.cr,pct)]], 'pv', '--c4', noGA?'':dl(t.pv, P('pv'), 'pv')],
     ['Product View', G(t.vi,intf), [['CPPV',S(d.cppv,brl)],['PVR',S(d.pvr,pct)]], 'vi', '--c8', noGA?'':dl(t.vi, P('vi'), 'vi')],
     ['AddToCart', G(t.atc,intf), [['CPAC',S(d.cpac,brl)],['ACR',S(d.acr,pct)]], 'atc', '--c3', noGA?'':dl(t.atc, P('atc'), 'atc')],
     ['Checkouts', G(t.ck,intf), [['CPIC',S(d.cpic,brl)],['VisCHK',S(d.vischk,pct)]], 'ck', '--c5', noGA?'':dl(t.ck, P('ck'), 'ck')],
-    ['Compras', intf(t.vendas), [['CAC',brl(d.cac),'cac'],['ConvCHK',S(d.convchk,pct)]], 'vendas', '--c7', dl(t.vendas, P('vendas'), 'vendas')],
-    ['Faturamento', brl(REV(t.fat)), [['ROAS',roasf(d.roas),'roas'],['Ticket Médio',brl(d.ticket)]], 'fat', '--heat-fat', dl(t.fat, P('fat'), 'fat')],
+    ['Purchases', intf(t.vendas), [['CAC',brl(d.cac),'cac'],['ConvCHK',S(d.convchk,pct)]], 'vendas', '--c7', dl(t.vendas, P('vendas'), 'vendas')],
+    ['Revenue', brl(REV(t.fat)), [['ROAS',roasf(d.roas),'roas'],['Average ticket',brl(d.ticket)]], 'fat', '--heat-fat', dl(t.fat, P('fat'), 'fat')],
   ];
 }
 function convCharts(ids,dd){
@@ -553,31 +553,54 @@ function convCharts(ids,dd){
   multiLine(ids[2], dd, [{label:'ACR',fn:x=>x.vi?+(x.atc/x.vi).toFixed(4):null,color:cvar('--chart-convlp'),fmt:'pct',axis:'L'},
      {label:'VisCHK',fn:x=>x.atc?+(x.ck/x.atc).toFixed(4):null,color:cvar('--chart-vischk'),fmt:'pct',axis:'L'}], {L:{fmt:'pct'}});
   multiLine(ids[3], dd, [{label:'ConvCHK',fn:x=>x.ck?+(x.vendas/x.ck).toFixed(4):null,color:cvar('--chart-convlp'),fmt:'pct',axis:'L'},
-     {label:'Compras/Page View',fn:x=>x.pv?+(x.vendas/x.pv).toFixed(4):null,color:cvar('--chart-cr'),fmt:'pct',axis:'L'}], {L:{fmt:'pct'}});
+     {label:'Purchases/Page View',fn:x=>x.pv?+(x.vendas/x.pv).toFixed(4):null,color:cvar('--chart-cr'),fmt:'pct',axis:'L'}], {L:{fmt:'pct'}});
 }
 
 
 /* ---------------- Gasto por localização (País · Região · Cidade) — Visão Geral ----------------
    Fonte: aba "Local no Google" (DATA.geo = {d,ch,src,country,region,city,sp,im,cl}). Respeita período e filtros da Visão Geral. */
-const COUNTRY_PT={'Germany':'Alemanha','United Kingdom':'Reino Unido','Netherlands':'Países Baixos','France':'França','Spain':'Espanha','Italy':'Itália','Portugal':'Portugal','Brazil':'Brasil','United States':'Estados Unidos','Canada':'Canadá','Austria':'Áustria','Belgium':'Bélgica','Switzerland':'Suíça','Ireland':'Irlanda','Poland':'Polônia','Sweden':'Suécia','Norway':'Noruega','Denmark':'Dinamarca','Finland':'Finlândia','Luxembourg':'Luxemburgo','Australia':'Austrália','Mexico':'México','Argentina':'Argentina','Japan':'Japão','China':'China'};
-const ctry=c=>COUNTRY_PT[c]||c;
-const GEO_LEVELS=[['country','País'],['region','Região'],['city','Cidade']];
+const ctry=c=>c;
+const GEO_LEVELS=[['country','Country'],['region','Region'],['city','City']];
 STATE.geoLevel='region';
 function renderGeo(){
   const G=(DATA.geo||[]).filter(r=>(!r.d||dateActive(r.d))&&geralMatch(r));
   const sp=r=>r.sp*(r.ch==='meta'?taxf():1);
   const tot=G.reduce((a,r)=>a+sp(r),0), nCountries=new Set(G.map(r=>r.country)).size;
-  const cnt=document.getElementById('geoCount'); if(cnt) cnt.textContent=nCountries+(nCountries===1?' país':' países');
-  /* card 1: gasto por país (rosca) */
-  const byC={}; G.forEach(r=>{ byC[r.country]=(byC[r.country]||0)+sp(r); });
-  const defs=Object.entries(byC).sort((a,b)=>b[1]-a[1]), PAL=chartPalette();
-  destroy('gGeoPie'); const el=document.getElementById('gGeoPie');
-  if(el) charts.gGeoPie=new Chart(el,{type:'doughnut',
-    data:{labels:defs.map(d=>ctry(d[0])),datasets:[{data:defs.map(d=>+d[1].toFixed(2)),backgroundColor:defs.map((d,i)=>PAL[i%PAL.length]),borderColor:cvar('--surface'),borderWidth:2}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{display:false},
-      tooltip:{callbacks:{label:c=>c.label+': '+brl(c.raw)+' ('+pct(tot?c.raw/tot:null)+')'}}}}});
-  const leg=document.getElementById('gGeoLeg');
-  if(leg) leg.innerHTML=defs.length?defs.map((d,i)=>'<div class="gl"><span class="dot" style="background:'+PAL[i%PAL.length]+'"></span>'+esc(ctry(d[0]))+'<b>'+brl(d[1])+' · '+pct(tot?d[1]/tot:null)+'</b></div>').join(''):'<div class="gl">Sem gasto por localização no período.</div>';
+  const cnt=document.getElementById('geoCount'); if(cnt) cnt.textContent=nCountries+(nCountries===1?' country':' countries');
+  /* card 1: mapa da Europa — gasto por país (tooltip: gasto, impressões, cliques, CTR, CPC) */
+  const NAME_ALIAS={'Bosnia and Herzegovina':'Bosnia and Herz.','North Macedonia':'Macedonia','Türkiye':'Turkey','Czech Republic':'Czechia','Faroe Islands':'Faeroe Is.','Åland Islands':'Åland','Republic of Moldova':'Moldova'};
+  const mapKey=c=>NAME_ALIAS[c]||c;
+  const byC={}; G.forEach(r=>{ const o=byC[mapKey(r.country)]||(byC[mapKey(r.country)]={name:r.country,sp:0,im:0,cl:0}); o.sp+=sp(r); o.im+=r.im||0; o.cl+=r.cl||0; });
+  const defs=Object.values(byC).sort((a,b)=>b.sp-a.sp), maxSp=Math.max(0,...defs.map(o=>o.sp));
+  const [mr,mg,mb]=hx2rgb(cvar('--chart-vendas'));
+  const shade=v=>{ const a=v&&maxSp?0.25+0.75*(v/maxSp):0; return a?'rgba('+mr+','+mg+','+mb+','+a.toFixed(2)+')':cgrid(); };
+  const mapEl=document.getElementById('gGeoMap'), tip=document.getElementById('gGeoTip');
+  if(mapEl){
+    const svg=['<svg viewBox="0 0 '+EU_MAP.vb[0]+' '+EU_MAP.vb[1]+'" role="img" aria-label="Spend by country">'];
+    Object.keys(EU_MAP.paths).forEach(n=>{ const o=byC[n]; svg.push('<path data-c="'+esc(n)+'" d="'+EU_MAP.paths[n]+'" fill="'+shade(o&&o.sp)+'"'+(o?' class="has"':'')+'/>'); });
+    svg.push('<g id="gGeoLbl"></g></svg>');
+    mapEl.innerHTML=svg.join('');
+    const lbl=mapEl.querySelector('#gGeoLbl'), sv=mapEl.querySelector('svg');
+    mapEl.querySelectorAll('path.has').forEach(p=>{ const o=byC[p.dataset.c]; let bb; try{ bb=p.getBBox(); }catch(e){ return; }
+      const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+      t.setAttribute('x',(bb.x+bb.width/2).toFixed(1)); t.setAttribute('y',(bb.y+bb.height/2+3).toFixed(1));
+      t.textContent=pct(tot?o.sp/tot:null).replace(',00','').replace('.00',''); if(o.sp/maxSp>0.55) t.setAttribute('class','lt'); lbl.appendChild(t); });
+    sv.addEventListener('mousemove',e=>{ const p=e.target.closest('path'); const o=p&&byC[p.dataset.c];
+      if(!p){ tip.hidden=true; return; }
+      const nm=p.dataset.c, v=o||{sp:0,im:0,cl:0};
+      tip.innerHTML='<div class="t">'+esc(o?o.name:nm)+'</div>'+
+        '<div class="r"><span>Spend</span><b>'+brl(v.sp)+'</b></div>'+
+        '<div class="r"><span>% of spend</span><b>'+pct(tot?v.sp/tot:null)+'</b></div>'+
+        '<div class="r"><span>Impressions</span><b>'+intf(v.im)+'</b></div>'+
+        '<div class="r"><span>Clicks</span><b>'+intf(v.cl)+'</b></div>'+
+        '<div class="r"><span>CTR</span><b>'+pct(v.im?v.cl/v.im:null)+'</b></div>'+
+        '<div class="r"><span>CPC</span><b>'+(v.cl?brl(v.sp/v.cl):'-')+'</b></div>';
+      tip.hidden=false; const w=tip.offsetWidth,h=tip.offsetHeight;
+      tip.style.left=Math.min(e.clientX+14,innerWidth-w-8)+'px'; tip.style.top=Math.min(e.clientY+14,innerHeight-h-8)+'px'; });
+    sv.addEventListener('mouseleave',()=>{ tip.hidden=true; });
+  }
+  const rank=document.getElementById('gGeoRank');
+  if(rank) rank.innerHTML=defs.length?defs.map(o=>'<div class="ur"><b></b><div class="bar"><i style="width:'+(maxSp?o.sp/maxSp*100:0).toFixed(1)+'%"></i></div><span>'+esc(o.name)+' · '+pct(tot?o.sp/tot:null)+'</span></div>').join(''):'<div class="gl">No location spend in the period.</div>';
   /* card 2: tabela País/Região/Cidade (nível escolhido) */
   const lv=STATE.geoLevel, lvLbl=(GEO_LEVELS.find(x=>x[0]===lv)||GEO_LEVELS[1])[1];
   const tabs=document.getElementById('geoTabs');
@@ -591,12 +614,9 @@ function renderGeo(){
     .sort((a,b)=>b.cells.gasto-a.cells.gasto||b.cells.impr-a.cells.impr);
   const T={sp:G.reduce((a,r)=>a+sp(r),0),im:G.reduce((a,r)=>a+(r.im||0),0),cl:G.reduce((a,r)=>a+(r.cl||0),0)};
   renderTable({id:'gGeoTbl', fit:true,
-    cols:[{key:'dim',label:lvLbl,type:'dim',w:210},{key:'gasto',label:'Gasto',type:'brl',heat:'gasto',w:92},{key:'pctg',label:'% Gasto',type:'pct',w:76},
-      {key:'impr',label:'Impr.',type:'int',w:70},{key:'cliques',label:'Cliques',type:'int',w:70},{key:'ctr',label:'CTR',type:'pct',w:70},{key:'cpc',label:'CPC',type:'brl',w:74}],
+    cols:[{key:'dim',label:lvLbl,type:'dim',w:210},{key:'gasto',label:'Spend',type:'brl',heat:'gasto',w:92},{key:'pctg',label:'% Spend',type:'pct',w:76},
+      {key:'impr',label:'Impr.',type:'int',w:70},{key:'cliques',label:'Clicks',type:'int',w:70},{key:'ctr',label:'CTR',type:'pct',w:70},{key:'cpc',label:'CPC',type:'brl',w:74}],
     rows, total:{dim:null,gasto:T.sp,pctg:T.sp?1:null,impr:T.im,cliques:T.cl,ctr:T.im?T.cl/T.im:null,cpc:T.cl?T.sp/T.cl:null}});
-  const note=document.getElementById('gGeoNote');
-  if(note) note.textContent=!G.length?'Sem gasto por localização no período/filtro selecionado (a aba "Local no Google" só tem gasto do Google Ads).'
-    :'Gasto, impressões e cliques por localização do usuário (aba "Local no Google"). Cliques sem localização identificada aparecem como "(não identificada)".';
 }
 
 /* ---------------- PAGE 1: Visão Geral (acumulado de todos os canais) ---------------- */
@@ -621,11 +641,12 @@ function renderGeral(){
     let prev=null; if(PV){ const xp=totals(PV.fS.filter(f),PV.fM.filter(f),PV.fG.filter(f)); prev=chanCells(xp,derive(xp)); }
     return {k:ch, prev, act:(x.sp||x.im||x.cl||x.pv||x.ck||x.vendas), cells:{dim:CH_LABEL[ch], ...chanCells(x,dv), share:(HAS_REV&&t.fat)?x.fat/t.fat:(t.vendas?x.vendas/t.vendas:null)}};
   }).filter(r=>r.act);   /* canais sem nenhuma atividade (ex.: TikTok sem planilha) não aparecem */
-  renderTable({id:'gChan', fit:true, cols:[{key:'dim',label:'Canal',type:'dim',w:104},
-      {key:'gasto',label:'Gasto',type:'brl',w:132,delta:1},{key:'cliques',label:'Cliques',type:'int',w:104,delta:1},{key:'pv',label:'Page Views',type:'int',w:116,delta:1},
-      {key:'ck',label:'Checkouts',type:'int',w:108,delta:1},{key:'vendas',label:'Compras',type:'int',heat:'vendas',w:100,delta:1},{key:'cac',label:'CAC',type:'brl',w:124,delta:1},
-      {key:'fat',label:'Faturamento',type:'brl',heat:'fat',w:140,delta:1},{key:'ticket',label:'Ticket',type:'brl',w:124,delta:1},{key:'roas',label:'ROAS',type:'roas',w:96,delta:1},
-      {key:'share',label:HAS_REV?'% Fat.':'% Compras',type:'pct',w:70}],
+  renderTable({id:'gChan', fit:true, cols:[{key:'dim',label:'Channel',type:'dim',w:104},
+      {key:'gasto',label:'Spend',type:'brl',w:132,delta:1},{key:'cliques',label:'Clicks',type:'int',w:104,delta:1},{key:'pv',label:'Page Views',type:'int',w:116,delta:1},
+      {key:'vi',label:'Product View',type:'int',w:116,delta:1},{key:'atc',label:'Add to Cart',type:'int',w:108,delta:1},
+      {key:'ck',label:'Checkout',type:'int',w:104,delta:1},{key:'vendas',label:'Purchase',type:'int',heat:'vendas',w:100,delta:1},{key:'cac',label:'CAC',type:'brl',w:124,delta:1},
+      {key:'fat',label:'Revenue',type:'brl',heat:'fat',w:140,delta:1},{key:'ticket',label:'Ticket',type:'brl',w:124,delta:1},{key:'roas',label:'ROAS',type:'roas',w:96,delta:1},
+      {key:'share',label:HAS_REV?'% Rev.':'% Purchases',type:'pct',w:70}],
     rows:chRows,
     total:{dim:null,...chanCells(t,d),share:(t.fat||t.vendas)?1:null},
     totalPrev:PV?(()=>{ const tpv=totals(PV.fS,PV.fM,PV.fG); return chanCells(tpv,derive(tpv)); })():null});
@@ -672,9 +693,6 @@ function renderChannel(){
   const ch=STATE.page, label=CH_LABEL[ch];
   const S=scopeData(ch), t=totals(S.fS,S.fM,S.fG), d=derive(t);
   const hasMedia=!!(B.channels_with_data||{})[ch];
-  document.getElementById('chWait').hidden=hasMedia;
-  document.getElementById('chWaitName').textContent=label;
-  document.getElementById('chSelNote').hidden=!S.sel;
   const noGA = S.sel||S.noGA;               /* sem funil do GA4 neste escopo */
   const isGshop = ch==='gshop';
   document.querySelectorAll('.ch-name').forEach(e=>e.textContent=label);
@@ -686,22 +704,14 @@ function renderChannel(){
   convCharts(['mCpmCtr','mCrPvr','mAcrChk','mConv'], dd);
   renderGranDD('mCombo'); comboChart('mCombo', dd);
   const aggAd=buildAgg(S.fS,S.fM,'ad');
-  const realAds=Object.entries(aggAd).filter(([n])=>n!=='(sem anúncio)');
+  const realAds=Object.entries(aggAd).filter(([n])=>n!=='(no ad)');
   document.getElementById('adBlock').hidden=!realAds.length;
   document.getElementById('adTableBlock').hidden=!realAds.length;
   hbar('mContent', realAds.map(([label,a])=>({label,v:a.fat})), x=>x.v, cvar('--chart-faturamento'), 10, brl);
   const isMeta=ch==='meta', isMedia=isMeta||ch==='google'||isGshop;
   ['mProdCard','buyersTitle','buyersCard'].forEach(id=>{ const e=document.getElementById(id); if(e) e.hidden=isMedia; });
   if(!isMedia) renderProdTable('mProd', S.fS);
-  const pt=document.getElementById('mProdTitle'); if(pt){ pt.textContent=isMedia?'Faturamento por anúncio':'Compras por produto'; pt.hidden=isMedia&&!realAds.length; }
-  const fn=document.getElementById('mFunnelNote');
-  if(fn){ if(fn.dataset.orig===undefined) fn.dataset.orig=fn.innerHTML;
-    fn.innerHTML=isMeta?'Considera <b>apenas o canal Meta Ads</b>: tudo vem da aba do Meta — gasto/impressões/cliques, Page Views = <b>Landing Page Views</b>, Product View = <b>Content Views</b>, AddToCart = <b>Adds to Cart</b>, Checkouts = <b>Checkouts Initiated</b>, Compras = <b>Purchases</b> e Faturamento = <b>Purchases Conversion Value</b>.':isGshop?'Considera <b>apenas campanhas Shopping e Performance Max</b> da aba "Google Ads - Shopping e PMax": gasto, impressões e cliques. Campanhas de pesquisa que também aparecem nessa aba são <b>excluídas</b>. No GA4 o tráfego pago do Google é um só (<code>google / cpc</code>), então esta página não tem as etapas Page Views → Checkouts (veja-as na página Google Ads).'
-      :ch==='google'?'Considera <b>apenas o canal Google Ads (pesquisa)</b>: gasto/impressões/cliques da aba do Google; Page Views a Checkouts = sessões do GA4 com origem <code>google / cpc</code> (inclui o tráfego de Shopping/PMax, que o GA4 não separa); Compras = coluna <b>Conversions</b> da aba do Google.':fn.dataset.orig; }
-  const cn=document.getElementById('mCrossNote');
-  if(cn){ if(cn.dataset.orig===undefined) cn.dataset.orig=cn.innerHTML;
-    cn.innerHTML=isMeta?'Meta Ads: <b>Compras</b> e <b>Faturamento</b> vêm das colunas <b>Purchases</b> e <b>Purchases Conversion Value</b> da própria aba do Meta — sem cruzamento com a aba Compras. O funil do GA4 não existe nesse nível, por isso as tabelas mostram mídia + compras do Meta.'
-      :(ch==='google'||isGshop)?'Google Ads: <b>Compras</b> = coluna <b>Conversions</b> da própria aba do Google'+(HAS_REV?' e <b>Faturamento</b> = <b>Total conv. value</b>':' (a planilha não traz valor de conversão, então Faturamento/ROAS/Ticket não são calculados)')+'. O funil do GA4 não existe nesse nível (campanha/grupo/palavra-chave), por isso as tabelas mostram mídia + conversões do Google.'+(isGshop?' A aba Shopping/PMax não tem a coluna Conversions: Compras e CAC aparecem vazios aqui.':''):cn.dataset.orig; }
+  const pt=document.getElementById('mProdTitle'); if(pt){ pt.textContent=isMedia?'Revenue by ad':'Purchases by product'; pt.hidden=isMedia&&!realAds.length; }
 
   const dl=dd.slice().reverse();
   renderTable({id:'tDaily', cols:ch==='meta'?META_DAILY_COLS:DAILY_COLS,
@@ -718,13 +728,13 @@ function renderChannel(){
     return rows; }
   function totRowOf(tt){const dv=derive(tt);return Object.assign({dim:null}, metricCells(tt,dv));}
   const Sc=scopeData(ch,'C'), Sa=scopeData(ch,'A'), Sd=scopeData(ch,'D');
-  const adset=ch==='meta'?'Conjunto':'Grupo de anúncios';
+  const adset=ch==='meta'?'Ad group':'Ad group';
   document.getElementById('adsetTitle').textContent=adset+(ch==='meta'?' (Ad Sets)':'');
-  renderTable({id:'tCamp', cols:HCOLS.map((c,i)=>i===0?{...c,label:'Campanha'}:c), rows:hierRows(buildAgg(Sc.fS,Sc.fM,'camp'),'tCamp'), total:totRowOf(totals(Sc.fS,Sc.fM)),
+  renderTable({id:'tCamp', cols:HCOLS.map((c,i)=>i===0?{...c,label:'Campaign'}:c), rows:hierRows(buildAgg(Sc.fS,Sc.fM,'camp'),'tCamp'), total:totRowOf(totals(Sc.fS,Sc.fM)),
     statusMap:latestStatusByDim(mediaAllDates(ch,'C'),'camp','cs'), selectable:true, selSet:STATE.mSelC, onSelect:(k,e)=>selDim('C',k,e&&(e.ctrlKey||e.metaKey))});
   renderTable({id:'tAdset', cols:HCOLS.map((c,i)=>i===0?{...c,label:adset,big:true}:c), rows:hierRows(buildAgg(Sa.fS,Sa.fM,'adset'),'tAdset'), total:totRowOf(totals(Sa.fS,Sa.fM)),
     statusMap:latestStatusByDim(mediaAllDates(ch,'A'),'adset','as'), selectable:true, selSet:STATE.mSelA, onSelect:(k,e)=>selDim('A',k,e&&(e.ctrlKey||e.metaKey))});
-  renderTable({id:'tAd', cols:(ch==='meta'?AD_HCOLS:HCOLS).map((c,i)=>i===0?{...c,label:'Anúncio'}:c), rows:hierRows(buildAgg(Sd.fS,Sd.fM,'ad'),'tAd'), total:totRowOf(totals(Sd.fS,Sd.fM)),
+  renderTable({id:'tAd', cols:(ch==='meta'?AD_HCOLS:HCOLS).map((c,i)=>i===0?{...c,label:'Ad'}:c), rows:hierRows(buildAgg(Sd.fS,Sd.fM,'ad'),'tAd'), total:totRowOf(totals(Sd.fS,Sd.fM)),
     statusMap:latestStatusByDim(mediaAllDates(ch,'D'),'ad','ds'), selectable:true, selSet:STATE.mSelAd, onSelect:(k,e)=>selDim('D',k,e&&(e.ctrlKey||e.metaKey))});
 
   cacDimChart('chCamp', Sc.fM, Sc.fS, 'camp', STATE.mSelC);
@@ -736,7 +746,7 @@ function renderChannel(){
   /* Shopping/PMax não tem grupo de anúncios nem anúncio na planilha: só a tabela de Campanhas */
   document.getElementById('adsetBlock').hidden=isGshop;
   if(isGshop) document.getElementById('adTableBlock').hidden=true;
-  document.getElementById('kwTableBlock').hidden=!kwOn; document.getElementById('kwNote').hidden=!kwOn;
+  document.getElementById('kwTableBlock').hidden=!kwOn;
   if(kwOn){
     const kf=r=>r.ch===ch && dateActive(r.d) && (!STATE.mSelC.size||STATE.mSelC.has(r.camp));
     const kM=MEDIA.filter(kf), kS=mediaSales(kM);
@@ -744,17 +754,17 @@ function renderChannel(){
     let kRows=Object.entries(kAgg).map(([k,a])=>({k, cells:Object.assign({dim:k}, metricCells(a,derive(a)))}))
       .sort((a,b)=>(b.cells.gasto-a.cells.gasto)||(b.cells.vendas-a.cells.vendas));
     const q=norm(STATE.search.tKw); if(q) kRows=kRows.filter(r=>norm(r.cells.dim).includes(q));
-    renderTable({id:'tKw', cols:HCOLS.map((c,i)=>i===0?{...c,label:'Palavra-chave',big:true}:c), rows:kRows, total:totRowOf(totals(kS,kM)),
+    renderTable({id:'tKw', cols:HCOLS.map((c,i)=>i===0?{...c,label:'Keyword',big:true}:c), rows:kRows, total:totRowOf(totals(kS,kM)),
       selectable:true, selSet:STATE.mSelKw, onSelect:(k,e)=>selDim('K',k,e&&(e.ctrlKey||e.metaKey))});
     cacDimChart('chKw', kM, kS, 'kw', STATE.mSelKw);
   }
 
   /* Compradores: últimos pedidos (PII mascarada), respeitando canal + período */
   const rows=isMedia?[]:BUYERS.filter(b=>b.ch===ch && dateActive(b.d));
-  document.getElementById('qCount').textContent=rows.length+' compras';
+  document.getElementById('qCount').textContent=rows.length+' purchases';
   renderTable({id:'tQual',
-    cols:[{key:'d',label:'Data',type:'date'},{key:'nm',label:'Nome',type:'dim'},{key:'prod',label:'Produto',type:'dim',big:true},
-      {key:'val',label:'Valor',type:'brl',w:110},{key:'camp',label:'Campanha',type:'dim',big:true},{key:'ad',label:'Anúncio',type:'dim',big:true},{key:'em',label:'E‑mail',type:'dim',w:200}],
+    cols:[{key:'d',label:'Date',type:'date'},{key:'nm',label:'Name',type:'dim'},{key:'prod',label:'Product',type:'dim',big:true},
+      {key:'val',label:'Amount',type:'brl',w:110},{key:'camp',label:'Campaign',type:'dim',big:true},{key:'ad',label:'Ad',type:'dim',big:true},{key:'em',label:'Email',type:'dim',w:200}],
     rows:rows.map((s,i)=>({k:'s'+i, cells:{d:s.d,nm:s.nm,prod:s.prod,val:s.val,camp:s.camp,ad:s.ad,em:s.em}}))});
 }
 
@@ -804,11 +814,11 @@ function renderHealthCard(d){
   const wSum=comps.reduce((s,c)=>s+c[1],0);
   const score=wSum? Math.max(0,Math.min(100,Math.round(comps.reduce((s,c)=>s+Math.min(c[0],1.3)*c[1],0)/wSum*100))) : null;
 
-  const band = score==null?{cls:'',lbl:'Sem dados'}:
-    score>=100?{cls:'rc-cyan',lbl:'Excelente'}:
-    score>=70?{cls:'rc-green',lbl:'Bom'}:
-    score>=40?{cls:'rc-yellow',lbl:'Regular'}:
-    {cls:'rc-red',lbl:'Crítico'};
+  const band = score==null?{cls:'',lbl:'No data'}:
+    score>=100?{cls:'rc-cyan',lbl:'Excellent'}:
+    score>=70?{cls:'rc-green',lbl:'Good'}:
+    score>=40?{cls:'rc-yellow',lbl:'Fair'}:
+    {cls:'rc-red',lbl:'Critical'};
   const ringColor = band.cls==='rc-cyan'?'var(--aqua)':band.cls==='rc-green'?'var(--good)':band.cls==='rc-yellow'?'var(--yellow)':band.cls==='rc-red'?'var(--red)':'var(--border)';
 
   document.getElementById('healthScore').textContent = score==null?'--':score;
@@ -816,18 +826,18 @@ function renderHealthCard(d){
   const badgeEl=document.getElementById('healthBadge');
   badgeEl.textContent = score==null?'--':`${band.lbl} · ${score}/100`;
   badgeEl.className = 'health-badge '+band.cls;
-  document.getElementById('healthDesc').textContent = goal ? 'ROAS (lucratividade) tem o maior peso na nota' : 'defina a meta de CAC abaixo p/ calcular a nota';
+  document.getElementById('healthDesc').textContent = goal ? 'ROAS (profitability) has the highest weight in the score' : 'set the CAC goal below to compute the score';
 
   const goalInput=document.getElementById('healthGoalInput');
   if(document.activeElement!==goalInput) goalInput.value = goal!=null? goal.toFixed(2) : '';
 
   document.getElementById('healthBars').innerHTML = [
-    healthBar('ROAS · meta '+(HEALTH_ROAS_TARGET?roasf(HEALTH_ROAS_TARGET):'—'), roasf(d.roas), pRoas),
-    healthBar('CAC · meta '+(goal!=null?brl(goal):'—'), brl(d.cac), pCac),
-    healthBar('CTR · mín '+(minCtr!=null?pct(minCtr):'—'), pct(d.ctr), pCtr),
-    healthBar('CR · mín '+(minCr!=null?pct(minCr):'—'), pct(d.cr), pCr),
-    healthBar('VisCHK · mín '+(minVischk!=null?pct(minVischk):'—'), pct(d.vischk), pVischk),
-    healthBar('ConvCHK · mín '+(minConvchk!=null?pct(minConvchk):'—'), pct(d.convchk), pConvchk),
+    healthBar('ROAS · goal '+(HEALTH_ROAS_TARGET?roasf(HEALTH_ROAS_TARGET):'—'), roasf(d.roas), pRoas),
+    healthBar('CAC · goal '+(goal!=null?brl(goal):'—'), brl(d.cac), pCac),
+    healthBar('CTR · min '+(minCtr!=null?pct(minCtr):'—'), pct(d.ctr), pCtr),
+    healthBar('CR · min '+(minCr!=null?pct(minCr):'—'), pct(d.cr), pCr),
+    healthBar('VisCHK · min '+(minVischk!=null?pct(minVischk):'—'), pct(d.vischk), pVischk),
+    healthBar('ConvCHK · min '+(minConvchk!=null?pct(minConvchk):'—'), pct(d.convchk), pConvchk),
   ].join('');
 }
 if(!window.__healthGoalWired){
@@ -854,11 +864,11 @@ function relColor(v,kind){ const p=relPerf(v,kind); if(p==null) return '';
 function relCard(label,val,hero){ return `<div class="rel-card${hero?' hero':''}"><div class="rl">${label}</div><div class="rv">${val}</div></div>`; }
 function relCards(id,t){ const d=derive(t);
   document.getElementById(id).innerHTML=[
-    relCard('Valor Gasto',brl(d.gasto)),
-    relCard('Compras',intf(t.vendas)),
-    relCard('Faturamento',brl(REV(t.fat))),
+    relCard('Spend',brl(d.gasto)),
+    relCard('Purchases',intf(t.vendas)),
+    relCard('Revenue',brl(REV(t.fat))),
     relCard('CAC',`<span class="${relColor(d.cac,'cac')}">${brl(d.cac)}</span>`),
-    relCard('Ticket Médio',brl(d.ticket)),
+    relCard('Average ticket',brl(d.ticket)),
     relCard('ROAS',`<span class="${relColor(d.roas,'roas')}">${roasf(d.roas)}</span>`,true),
   ].join('');
 }
@@ -867,7 +877,7 @@ function relRenderTable(id,cols,rows,foot){
   const el=document.getElementById(id); if(!el) return;
   const th='<thead><tr>'+cols.map(c=>`<th class="${c.cls||''}">${c.label}</th>`).join('')+'</tr></thead>';
   const tb='<tbody>'+(rows.length?rows.map(r=>'<tr>'+r.map(c=>`<td class="${c.cls||''}">${c.v}</td>`).join('')+'</tr>').join('')
-    :`<tr><td class="dim" colspan="${cols.length}" style="color:var(--muted)">Sem dados no período.</td></tr>`)+'</tbody>';
+    :`<tr><td class="dim" colspan="${cols.length}" style="color:var(--muted)">No data in the period.</td></tr>`)+'</tbody>';
   const tf=foot?('<tfoot><tr>'+foot.map(c=>`<td class="${c.cls||''}">${c.v}</td>`).join('')+'</tr></tfoot>'):'';
   el.innerHTML=th+tb+tf;
 }
@@ -875,15 +885,14 @@ function adLink(name){ const u=AD_LINKS[name];
   return u?`<a class="rel-adlink" href="${esc(u)}" target="_blank" rel="noopener">Abrir ▸</a>`:'<span class="rel-adlink off">—</span>'; }
 function relBriefKey(){ if(STATE.selDays.size) return null; return STATE.preset||null; }
 function renderRelBrief(){
-  const wrap=document.getElementById('relBrief'), stampEl=document.getElementById('relBriefStamp');
+  const wrap=document.getElementById('relBrief');
   const bf=DATA.briefings||{}, per=bf.periodos||{}, key=relBriefKey();
-  stampEl.textContent = bf.generated_at ? `Briefing gerado por IA · última atualização ${bf.generated_at} · atualiza 1×/dia às 23h59` : '';
   if(!Object.keys(per).length){
-    wrap.innerHTML='<div class="rel-brief-empty">O briefing por IA ainda não foi gerado. Ele é atualizado automaticamente 1×/dia às 23h59.</div>'; return; }
+    wrap.innerHTML='<div class="rel-brief-empty">The AI briefing has not been generated yet. It refreshes automatically once a day at 23:59.</div>'; return; }
   if(!key || !per[key]){
-    wrap.innerHTML='<div class="rel-brief-empty">Briefing disponível para os períodos predefinidos (Hoje, Ontem, 3&nbsp;dias, 7&nbsp;dias, 14&nbsp;dias, 30&nbsp;dias, Este mês, Mês passado, Todo período). Selecione um desses botões no topo.</div>'; return; }
+    wrap.innerHTML='<div class="rel-brief-empty">The briefing is available for the preset periods (Today, Yesterday, 3 days, 7 days, 14 days, 30 days, This month, Last month, All time). Pick one of those buttons at the top.</div>'; return; }
   const item=per[key];
-  wrap.innerHTML = item.html || item.texto || '<div class="rel-brief-empty">Sem conteúdo.</div>';
+  wrap.innerHTML = item.html || item.texto || '<div class="rel-brief-empty">No content.</div>';
 }
 function renderRelatorios(){
   const S=scopeData(null);
@@ -894,10 +903,10 @@ function renderRelatorios(){
 
   /* cabeçalho do período */
   const pr=PRESETS.find(p=>p[0]===STATE.preset);
-  document.getElementById('relPeriodName').textContent = STATE.selDays.size?'Dias selecionados':(pr?pr[1]:'Personalizado');
+  document.getElementById('relPeriodName').textContent = STATE.selDays.size?'Selected days':(pr?pr[1]:'Custom');
   let rangeTxt='';
   if(STATE.from&&STATE.to){ const nD=Math.round((new Date(STATE.to+'T00:00:00')-new Date(STATE.from+'T00:00:00'))/86400000)+1;
-    rangeTxt=`${brdate(STATE.from)} a ${brdate(STATE.to)}`+(nD>0?` · ${nD} dia${nD>1?'s':''}`:''); }
+    rangeTxt=`${brdate(STATE.from)} to ${brdate(STATE.to)}`+(nD>0?` · ${nD} day${nD>1?'s':''}`:''); }
   document.getElementById('relPeriodRange').textContent=rangeTxt;
 
   relCards('relCardsTotal',tTot);
@@ -915,7 +924,7 @@ function renderRelatorios(){
       {v:roasf(d.roas),cls:relColor(d.roas,'roas')},{v:brl(d.cac),cls:relColor(d.cac,'cac')},
       {v:brl(d.cpm)},{v:pct(d.ctr)}]; });
   relRenderTable('relCamp',
-    [{label:'Canal',cls:'dim'},{label:'Campanha',cls:'dim'},{label:'Gasto'},{label:'Compras'},{label:'ROAS'},{label:'CAC'},{label:'CPM'},{label:'CTR'}],
+    [{label:'Channel',cls:'dim'},{label:'Campaign',cls:'dim'},{label:'Spend'},{label:'Purchases'},{label:'ROAS'},{label:'CAC'},{label:'CPM'},{label:'CTR'}],
     crows,
     [{v:'Total',cls:'dim'},{v:'',cls:'dim'},{v:brl(dvA.gasto)},{v:intf(tAds.vendas)},{v:roasf(dvA.roas),cls:relColor(dvA.roas,'roas')},{v:brl(dvA.cac),cls:relColor(dvA.cac,'cac')},
      {v:brl(dvA.cpm)},{v:pct(dvA.ctr)}]);
@@ -923,8 +932,8 @@ function renderRelatorios(){
   /* top / piores anúncios (mídia paga, com nome de anúncio e gasto no período) */
   const keyAd=r=>r.ch+'\u0001'+r.camp+'\u0001'+r.ad, byA={};
   const gA=k=>byA[k]||(byA[k]=newBucket());
-  S.fM.forEach(r=>{ if(r.ad!=='(sem anúncio)') addMedia(gA(keyAd(r)),r); });
-  mediaSales(S.fM).forEach(r=>{ if(r.ad!=='(sem anúncio)') addSales(gA(keyAd(r)),r); });
+  S.fM.forEach(r=>{ if(r.ad!=='(no ad)') addMedia(gA(keyAd(r)),r); });
+  mediaSales(S.fM).forEach(r=>{ if(r.ad!=='(no ad)') addSales(gA(keyAd(r)),r); });
   const ads=Object.entries(byA).filter(([k,ag])=>ag.sp>0).map(([k,ag])=>{ const d=derive(ag);
     return {name:k.split('\u0001')[2],gasto:d.gasto,vendas:ag.vendas,cac:d.cac,roas:d.roas}; });
   ads.sort((a,b)=>{ const ra=a.roas==null?-1:a.roas, rb=b.roas==null?-1:b.roas; if(rb!==ra) return rb-ra;
@@ -932,7 +941,7 @@ function renderRelatorios(){
   const TOP_MIN_VENDAS=3;
   const top=ads.filter(a=>a.vendas>=TOP_MIN_VENDAS).slice(0,5), topSet=new Set(top);
   const worst=ads.filter(a=>!topSet.has(a)).slice(-5).reverse();
-  const adCols=[{label:'Anúncio',cls:'dim'},{label:'Gasto'},{label:'Compras'},{label:'CAC'},{label:'ROAS'},{label:'Link',cls:'dim'}];
+  const adCols=[{label:'Ad',cls:'dim'},{label:'Spend'},{label:'Purchases'},{label:'CAC'},{label:'ROAS'},{label:'Link',cls:'dim'}];
   const adRows=list=>list.map(a=>[{v:esc(a.name),cls:'dim'},{v:brl(a.gasto)},{v:intf(a.vendas)},
     {v:brl(a.cac),cls:relColor(a.cac,'cac')},{v:roasf(a.roas),cls:relColor(a.roas,'roas')},{v:adLink(a.name),cls:'dim'}]);
   relRenderTable('relTop',adCols,adRows(top));
@@ -945,30 +954,30 @@ const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','
 
 /* ---------------- date presets ---------------- */
 const PRESETS=[
-  ['hoje','Hoje',()=>[TODAY,TODAY]],
-  ['ontem','Ontem',()=>[addDays(TODAY,-1),addDays(TODAY,-1)]],
-  ['3d','3 dias',()=>[addDays(TODAY,-2),TODAY]],
-  ['7d','7 dias',()=>[addDays(TODAY,-6),TODAY]],
-  ['14d','14 dias',()=>[addDays(TODAY,-13),TODAY]],
-  ['30d','30 dias',()=>[addDays(TODAY,-29),TODAY]],
-  ['mes','Este mês',()=>{const [y,m]=TODAY.split('-');return [`${y}-${m}-01`,TODAY];}],
-  ['mespass','Mês passado',()=>{const dt=new Date(TODAY+'T00:00:00');const f=new Date(dt.getFullYear(),dt.getMonth()-1,1);const l=new Date(dt.getFullYear(),dt.getMonth(),0);return [dstr(f),dstr(l)];}],
-  ['todo','Máximo',()=>[B.date_min,B.date_max]],
+  ['hoje','Today',()=>[TODAY,TODAY]],
+  ['ontem','Yesterday',()=>[addDays(TODAY,-1),addDays(TODAY,-1)]],
+  ['3d','3 days',()=>[addDays(TODAY,-2),TODAY]],
+  ['7d','7 days',()=>[addDays(TODAY,-6),TODAY]],
+  ['14d','14 days',()=>[addDays(TODAY,-13),TODAY]],
+  ['30d','30 days',()=>[addDays(TODAY,-29),TODAY]],
+  ['mes','This month',()=>{const [y,m]=TODAY.split('-');return [`${y}-${m}-01`,TODAY];}],
+  ['mespass','Last month',()=>{const dt=new Date(TODAY+'T00:00:00');const f=new Date(dt.getFullYear(),dt.getMonth()-1,1);const l=new Date(dt.getFullYear(),dt.getMonth(),0);return [dstr(f),dstr(l)];}],
+  ['todo','All time',()=>[B.date_min,B.date_max]],
 ];
 /* rótulo do botão de período — mostra o intervalo aplicado dentro do próprio botão */
 function syncDateInputs(){
   const el=document.getElementById('periodBtnLabel'); if(!el) return;
-  if(STATE.selDays.size){ el.textContent=STATE.selDays.size+(STATE.selDays.size>1?' dias selecionados':' dia selecionado'); return; }
+  if(STATE.selDays.size){ el.textContent=STATE.selDays.size+(STATE.selDays.size>1?' days selected':' day selected'); return; }
   const pr=PRESETS.find(p=>p[0]===STATE.preset);
   if(STATE.from&&STATE.to) el.textContent=brdate(STATE.from)+' – '+brdate(STATE.to)+(pr?' · '+pr[1]:'');
-  else el.textContent='Selecionar período';
+  else el.textContent='Select period';
 }
 function applyPreset(id){ const p=PRESETS.find(x=>x[0]===id); if(!p)return; const [f,t]=p[2]();
   STATE.from=f; STATE.to=t; STATE.preset=id; STATE.selDays.clear(); ppClose(); syncDateInputs(); renderAll(); }
 
 /* ---- popover do seletor de período (estilo Data Studio) ---- */
-const MONTHS_PT=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-const DOW_PT=['D','S','T','Q','Q','S','S'];
+const MONTHS_PT=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DOW_PT=['S','M','T','W','T','F','S'];
 const PP={from:null,to:null,preset:'',fromView:'',toView:''};
 function ymView(ds){ return (ds||TODAY).slice(0,7); }
 function shiftView(view,delta){ const [y,m]=view.split('-').map(Number); const dt=new Date(y,m-1+delta,1); return dt.getFullYear()+'-'+pad(dt.getMonth()+1); }
@@ -1004,7 +1013,7 @@ function ppRenderCal(side){
     const cls=['pp-day']; if(inR) cls.push('in'); if(ds===PP.from) cls.push('edge-l'); if(ds===PP.to) cls.push('edge-r'); if(isEdge) cls.push('sel');
     cells+=`<button class="${cls.join(' ')}" data-side="${side}" data-d="${ds}">${d}</button>`;
   }
-  host.innerHTML=`<div class="pp-cal-head"><span class="pp-cal-title">${side==='from'?'Data de início':'Data de término'}</span></div>
+  host.innerHTML=`<div class="pp-cal-head"><span class="pp-cal-title">${side==='from'?'Start date':'End date'}</span></div>
     <div class="pp-cal-nav"><button class="pp-nav" data-nav="-1">‹</button><span class="pp-cal-month">${MONTHS_PT[m-1]} ${y}</span><button class="pp-nav" data-nav="1">›</button></div>
     <div class="pp-dow">${DOW_PT.map(x=>`<span>${x}</span>`).join('')}</div>
     <div class="pp-grid">${cells}</div>`;
@@ -1022,8 +1031,8 @@ function ppPickDay(side,ds){
 function ppRenderRange(){
   const el=document.getElementById('ppRange');
   if(PP.from&&PP.to){ const n=Math.round((new Date(PP.to+'T00:00:00')-new Date(PP.from+'T00:00:00'))/86400000)+1;
-    el.textContent=brdate(PP.from)+' – '+brdate(PP.to)+(n>0?' · '+n+(n>1?' dias':' dia'):''); }
-  else el.textContent='Selecione as datas';
+    el.textContent=brdate(PP.from)+' – '+brdate(PP.to)+(n>0?' · '+n+(n>1?' days':' day'):''); }
+  else el.textContent='Select the dates';
 }
 function ppApply(){
   if(!PP.from||!PP.to){ ppClose(); return; }
@@ -1035,7 +1044,7 @@ function ppApply(){
    Salvo no navegador (localStorage 'dm_budget'): {goal: R$/mês, pct: {canal: %}}. Só planejamento —
    não altera os dados; o "realizado" compara com o gasto do mês corrente das abas de mídia. */
 const BUDGET_KEY='dm_budget';
-const BUDGET_CH=[['google','Google Ads'],['gshop','Google Shopping/PMax'],['meta','Meta Ads'],['tiktok','TikTok Ads']].filter(c=>!HIDDEN_PAGES.includes(c[0]));
+const BUDGET_CH=[['google','Google Ads'],['meta','Meta Ads'],['tiktok','TikTok Ads']];   /* divisão por FONTE de tráfego (não por tipo de campanha) */
 const BP={goal:0,pct:{}};
 function bpLoad(){ try{ const o=JSON.parse(localStorage.getItem(BUDGET_KEY)||'null'); return o&&typeof o==='object'?{goal:+o.goal||0,pct:o.pct||{}}:{goal:0,pct:{}}; }catch(e){ return {goal:0,pct:{}}; } }
 const BUDGET=bpLoad();
@@ -1070,18 +1079,18 @@ function bpUpdate(){
     const k=row.dataset.k, p=BP.pct[k]||0, alloc=goal*p/100, sp=bpSpent(k); tot+=p;
     row.querySelector('.bp-val').textContent=goal&&p?brl(alloc):'-';
     const sub=row.querySelector('.bp-sub'), bar=row.querySelector('.bp-bar i');
-    if(sp==null){ sub.textContent='Sem gasto automático (informe manualmente)'; return; }
-    sub.textContent='Realizado no mês: '+brl(sp)+(alloc?' · '+pct(sp/alloc)+' da verba':'');
+    if(sp==null){ sub.textContent='No automatic spend (enter manually)'; return; }
+    sub.textContent='Spent this month: '+brl(sp)+(alloc?' · '+pct(sp/alloc)+' of budget':'');
     bar.style.width=alloc?Math.min(100,sp/alloc*100)+'%':'0%'; bar.classList.toggle('over',!!alloc&&sp>alloc);
   });
   tot=Math.round(tot*100)/100;
   const el=document.getElementById('bpTotal'), ok=tot===100, empty=tot===0;
-  el.innerHTML=empty?'Defina a divisão (soma = 100%)':`Total: <span class="${ok?'bp-total-ok':'bp-total-bad'}">${nf2.format(tot)}%</span>`+(ok?'':(tot<100?' · faltam '+nf2.format(100-tot)+'%':' · excede '+nf2.format(tot-100)+'%'));
+  el.innerHTML=empty?'Set the split (must total 100%)':`Total: <span class="${ok?'bp-total-ok':'bp-total-bad'}">${nf2.format(tot)}%</span>`+(ok?'':(tot<100?' · missing '+nf2.format(100-tot)+'%':' · over by '+nf2.format(tot-100)+'%'));
   document.getElementById('bpApply').disabled=!(ok||empty);
 }
 function bpSyncLabel(){
   const el=document.getElementById('budgetBtnLabel'); if(!el) return;
-  el.textContent=BUDGET.goal?'Meta '+brl(BUDGET.goal)+'/mês':'Metas e verba';
+  el.textContent=BUDGET.goal?'Goal '+brl(BUDGET.goal)+'/month':'Goals & budget';
 }
 function bpApply(){
   BUDGET.goal=BP.goal; BUDGET.pct={}; BUDGET_CH.forEach(([k])=>{ if(BP.pct[k]>0) BUDGET.pct[k]=BP.pct[k]; });
@@ -1099,7 +1108,7 @@ function setPage(p){
   document.getElementById('page-geral').classList.toggle('active',p==='geral');
   document.getElementById('page-ch').classList.toggle('active',CH_PAGES.includes(p));
   document.getElementById('page-rel').classList.toggle('active',p==='rel');
-  document.getElementById('ptitle').textContent = CH_PAGES.includes(p)?CH_LABEL[p]:(p==='rel'?'Insights de IA':'Visão Geral');
+  document.getElementById('ptitle').textContent = CH_PAGES.includes(p)?CH_LABEL[p]:(p==='rel'?'AI Insights':'Overview');
   document.getElementById('navToggle').checked=false;
   history.replaceState(null,'', '#'+p);
   renderAll();
@@ -1146,9 +1155,8 @@ document.getElementById('logoName').textContent=(B.client_name||'—').trim();
 document.getElementById('logoSub').textContent=B.client_sub||'';
 document.getElementById('taxLabel').textContent=B.tax_label||'Imposto';
 document.querySelectorAll('.cur-sym').forEach(e=>e.textContent=CUR);
-document.getElementById('updated').innerHTML='Última atualização:<br>'+B.generated_at_brt+' (BRT)';
+document.getElementById('updated').innerHTML='Last update:<br>'+B.generated_at_brt+' (BRT)';
 document.getElementById('buildFoot').textContent='build __BUILD_ID__';
-document.getElementById('buildFoot2').textContent='· build __BUILD_ID__';
 
 syncDateInputs();
 bpSyncLabel();

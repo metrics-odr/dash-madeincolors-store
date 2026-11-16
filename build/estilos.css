@@ -502,3 +502,15 @@
   .geo-tabs{display:flex; gap:6px}
   .geo-tabs .pp-preset{width:auto; padding:5px 12px; font-size:12px}
   .geo-tbl{max-height:300px; border:1px solid var(--border); border-radius:10px; overflow:auto}
+  .geo-map svg{width:100%; height:auto; max-height:420px; display:block}
+  .geo-map path{stroke:var(--surface); stroke-width:.6; transition:opacity .12s}
+  .geo-map path.has{cursor:pointer}
+  .geo-map path:hover{opacity:.8; stroke:var(--ink); stroke-width:1}
+  .geo-map text{font-size:9px; font-weight:700; fill:var(--ink); pointer-events:none; text-anchor:middle}
+  .geo-map text.lt{fill:#fff}
+  .geo-rank{margin-top:10px; max-height:150px}
+  .geo-rank .ur{grid-template-columns:0 1fr 170px}
+  .geo-grid{grid-template-columns:minmax(300px,1fr) minmax(0,1.4fr)}
+  @media(max-width:1200px){.geo-grid{grid-template-columns:1fr}}
+  .geo-rank .bar i{background:var(--chart-vendas)}
+  .chan-prod{grid-template-columns:1fr}   /* tabela de canais com funil completo ocupa a largura toda */
