@@ -445,7 +445,7 @@ function deltaBadge(cur,prev,key){
   return `<span class="delta ${cls}">${arrow} ${nf1.format(Math.abs(p))}%</span>`;
 }
 /* variação por canal (tabela "Resultado por canal"): mesmo cálculo, mas das células já derivadas */
-function chanCells(x,dv){ return {gasto:dv.gasto,cliques:x.cl,pv:x.pv,ck:x.ck,vendas:x.vendas,cac:dv.cac,fat:REV(x.fat),ticket:dv.ticket,roas:dv.roas};
+function chanCells(x,dv){ return {gasto:dv.gasto,cliques:x.cl,pv:x.pv,vi:x.vi,atc:x.atc,ck:x.ck,vendas:x.vendas,cac:dv.cac,fat:REV(x.fat),ticket:dv.ticket,roas:dv.roas};
 }
 /* sparkline (SVG) da série diária de uma etapa; sem dados suficientes -> vazio.
    dates/fmt alimentam o tooltip ao passar o mouse (ver initSparkTip) */
@@ -643,7 +643,8 @@ function renderGeral(){
   }).filter(r=>r.act);   /* canais sem nenhuma atividade (ex.: TikTok sem planilha) não aparecem */
   renderTable({id:'gChan', fit:true, cols:[{key:'dim',label:'Channel',type:'dim',w:104},
       {key:'gasto',label:'Spend',type:'brl',w:132,delta:1},{key:'cliques',label:'Clicks',type:'int',w:104,delta:1},{key:'pv',label:'Page Views',type:'int',w:116,delta:1},
-      {key:'ck',label:'Checkouts',type:'int',w:108,delta:1},{key:'vendas',label:'Purchases',type:'int',heat:'vendas',w:100,delta:1},{key:'cac',label:'CAC',type:'brl',w:124,delta:1},
+      {key:'vi',label:'Product View',type:'int',w:116,delta:1},{key:'atc',label:'Add to Cart',type:'int',w:108,delta:1},
+      {key:'ck',label:'Checkout',type:'int',w:104,delta:1},{key:'vendas',label:'Purchase',type:'int',heat:'vendas',w:100,delta:1},{key:'cac',label:'CAC',type:'brl',w:124,delta:1},
       {key:'fat',label:'Revenue',type:'brl',heat:'fat',w:140,delta:1},{key:'ticket',label:'Ticket',type:'brl',w:124,delta:1},{key:'roas',label:'ROAS',type:'roas',w:96,delta:1},
       {key:'share',label:HAS_REV?'% Rev.':'% Purchases',type:'pct',w:70}],
     rows:chRows,

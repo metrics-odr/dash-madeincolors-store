@@ -513,3 +513,4 @@
   .geo-grid{grid-template-columns:minmax(300px,1fr) minmax(0,1.4fr)}
   @media(max-width:1200px){.geo-grid{grid-template-columns:1fr}}
   .geo-rank .bar i{background:var(--chart-vendas)}
+  .chan-prod{grid-template-columns:1fr}   /* tabela de canais com funil completo ocupa a largura toda */
