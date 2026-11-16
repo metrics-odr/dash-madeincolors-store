@@ -46,13 +46,13 @@ build/app.js               # lógica + renderização (tudo roda no navegador)
 build/logo.png             # logo (embutido na sidebar e no favicon via LOGO_FILE)
 build/gerar_relatorios.py  # métricas p/ Insights (workflow 23:50 BRT)
 .github/workflows/deploy.yml  # build + GitHub Pages (push em build/**, cron */30 e workflow_dispatch)
-ia-worker/ + deploy-worker.yml # legado/opcional (só manual)
+ia-worker/                 # legado/opcional (workflow de deploy do Worker removido — não usar)
 ```
 Teste local: `python build/build.py --google-file g.csv --google-shop-file gs.csv --geo-google-file geo.csv --ga4-file ga.csv --out dist/index.html`
 
 ## Pontos a confirmar com o cliente
-1. **Moeda** dos custos do Google Ads (hoje exibida como `R$` — `CURRENCY` em `build/config.py`).
-2. Origem do **valor das compras** (para liberar Faturamento/ROAS).
+1. Moeda: **Euro (€)** — `CURRENCY` em `build/config.py`.
+2. **Faturamento/ROAS**: o cliente vai inserir na planilha; até lá ficam "-" (ajustar depois: `GID_SALES` ou coluna de valor de conversão).
 3. Campanhas PMax/Shopping hoje têm gasto zero; a aba Shopping não tem coluna Conversions.
 
 ## Problemas conhecidos de publicação

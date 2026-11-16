@@ -43,7 +43,7 @@ GID_GEO_GOOGLE = ""   # aba "Local no Google"
 TAX_FACTOR = 1.0       # sem imposto (com 1.0 o toggle "Imposto" some)
 TAX_LABEL = "Imposto"
 # Símbolo da moeda exibido nos valores (confirme a moeda da conta do Google Ads).
-CURRENCY = "R$"
+CURRENCY = "€"
 
 # A aba Compras é uma lista de pedidos concretizados (sem coluna de status
 # utilizável)? True = toda linha é compra paga. False = filtra por is_paid()
