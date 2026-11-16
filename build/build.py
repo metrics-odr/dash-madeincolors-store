@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Dashboard de Controle de Tráfego Pago — Funil ECOMMERCE (mídia paga × GA4 × Compras).
-(Made In Colors · Novamik: Google Ads + Google Shopping/PMax + GA4; sem aba de Compras — as compras
+(Made In Colors · Noovamik: Google Ads + Google Shopping/PMax + GA4; sem aba de Compras — as compras
 vêm do evento `purchase` do GA4 e, por campanha/palavra-chave, da coluna Conversions do Google Ads.)
 Os valores do cliente (planilha, abas, taxa, rótulos, metas, worker da IA)
 ficam em `build/config.py` — veja `build/config.example.py` para o modelo e
@@ -551,11 +551,11 @@ def load_sales(rows, media):
         return [], [], []
     sidx = header_index(
         rows[0],
-        {"created": ["data de criacao", "data", "created", "created_time"],
-         "name": ["cliente / nome", "comprador(a)", "comprador", "nome", "full_name"],
+        {"created": ["data de criacao", "data", "date", "created", "created_time"],
+         "name": ["cliente / nome", "comprador(a)", "comprador", "nome", "name", "full_name"],
          "email": ["cliente / e-mail", "e-mail", "email"],
          "prod": ["produto", "product"],
-         "val": ["preco", "faturamento", "valor da venda", "valor", "value", "amount"],
+         "val": ["preco", "price", "faturamento", "valor da venda", "valor", "value", "amount"],
          "order": ["order id", "id do pedido", "pedido", "order"],
          "utm_source": ["utm source", "utm_source"],
          "utm_medium": ["utm medium", "utm_medium"],

@@ -1,4 +1,4 @@
-# CLAUDE.md — Dashboard de Resultados · Novamik - Made In Colors (Ecommerce)
+# CLAUDE.md — Dashboard de Resultados · Noovamik - Made in Colors (Ecommerce)
 
 > Lido automaticamente pelo Claude Code. Repositório `metrics-odr/dash-madeincolors-store`
 > (engine copiada de `metrics-odr/dash-maya-shopp`, adaptada à identidade do cliente).
@@ -26,9 +26,11 @@ Objetivo: o usuário ver a alteração publicada no navegador o quanto antes. Nu
 | Google Ads — Gasto por localização | 1126389235 | seção **Gasto por localização** (País · Região · Cidade) na Visão Geral |
 | GA4 | 1669456740 | funil por sessões (page_view → view_item → add_to_cart → begin_checkout) e **compras** (evento `purchase`) |
 
-Não há aba de Compras/valor: **Faturamento, ROAS e Ticket aparecem "-"** (`has_revenue=false`). Compras da Visão Geral =
-evento `purchase` do GA4; compras por campanha/grupo/palavra-chave = coluna Conversions do Google Ads. Se surgir uma
-aba Compras ou uma coluna de valor de conversão, preencha `GID_SALES` em `build/config.py` (o resto se ativa sozinho).
+| Compras (aba "Compras") | 1836439885 | **Compras** = Order IDs distintos · **Faturamento** = soma do `Price` (€) · país/produto/UTM. Alimenta Visão Geral, Faturamento, ROAS, Ticket e "Compras por produto" |
+
+Compras por campanha/grupo/palavra-chave nas páginas de canal = coluna Conversions do Google Ads (a atribuição de
+vendas por UTM só casa quando a compra traz `utm_campaign` igual à campanha). Se `GID_SALES` ficar vazio, a Visão Geral
+cai para o evento `purchase` do GA4 (sem valor => Faturamento/ROAS "-").
 
 ## Escopo / páginas
 - Sidebar: Visão Geral · **Google Ads (visão única, inclui Shopping/PMax)** · Insights de IA.
@@ -52,7 +54,7 @@ Teste local: `python build/build.py --google-file g.csv --google-shop-file gs.cs
 
 ## Pontos a confirmar com o cliente
 1. Moeda: **Euro (€)** — `CURRENCY` em `build/config.py`.
-2. **Faturamento/ROAS**: o cliente vai inserir na planilha; até lá ficam "-" (ajustar depois: `GID_SALES` ou coluna de valor de conversão).
+2. Vendas com `utm_source = "Sem UTM"`/vazio não são atribuíveis a canal pago (ficam em Direto/Outros).
 3. Campanhas PMax/Shopping hoje têm gasto zero; a aba Shopping não tem coluna Conversions.
 
 ## Problemas conhecidos de publicação
