@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Configuração do cliente — Novamik · Made In Colors (Ecommerce).
+Configuração do cliente — Noovamik · Made In Colors (Ecommerce).
 
 Este é o ÚNICO arquivo que você precisa editar para colocar um cliente novo
 no ar. Depois de editar, teste localmente:
@@ -17,11 +17,11 @@ from __future__ import annotations
 # Todas as abas ficam na MESMA planilha (mudam só os gids).
 # A planilha precisa estar com o link público em modo "Qualquer pessoa com
 # o link pode visualizar" (o build lê via export CSV, somente leitura).
-SPREADSHEET_ID = "1G4j0KJ7Uv3oo_Mvpdqhk7XIL9OecZLtgB2f0syyCndk"   # Novamik · Made In Colors
+SPREADSHEET_ID = "1G4j0KJ7Uv3oo_Mvpdqhk7XIL9OecZLtgB2f0syyCndk"   # Noovamik · Made In Colors
 GID_GA4 = "1669456740"    # OBRIGATÓRIO · aba GA4 (Date · Event name · Session source/medium · Event count · Sessions · Total users)
-# Aba Compras: NÃO existe neste cliente. Sem GID_SALES, as compras da Visão Geral vêm do evento `purchase`
-# do GA4 (sem valor => sem Faturamento/ROAS/Ticket). Se um dia houver aba Compras, preencha o gid aqui.
-GID_SALES = ""
+# Aba Compras (1 linha por item: Date · Name · Email · Product · Price · Country · Order ID · utm_*). Compras = Order IDs
+# distintos; Faturamento = soma do Price (€). Se esta aba for esvaziada/removida, cai para o evento `purchase` do GA4.
+GID_SALES = "1836439885"
 # Mídia paga: deixe "" no canal que ainda não tem planilha.
 GID_META = ""             # Meta Ads: fora do escopo por enquanto (página oculta; o backend segue pronto — basta preencher o gid)
 GID_GOOGLE = "888044421"  # Google Ads · Campanhas > Grupos de anúncios > Palavras-chave (Day · Campaign Name · Ad Group Name · Ad Name · Cost · Impressions · Clicks · Conversions · Keyword)
@@ -68,7 +68,7 @@ HIDDEN_PAGES = ("meta", "tiktok")
 # ==========================================================================
 # 3) RÓTULOS EXIBIDOS NA INTERFACE
 # ==========================================================================
-CLIENT_NAME = "Novamik - Made In Colors"   # nome exibido no topo do menu lateral (abaixo do logo)
+CLIENT_NAME = "Noovamik - Made in Colors"   # nome exibido no topo do menu lateral (abaixo do logo)
 CLIENT_SUB = "Ecommerce"                   # subtítulo abaixo do nome
 MAIN_PRODUCT = "Todos os produtos"
 LOGO_FILE = "logo.png"                     # imagem do logo (em build/), embutida na sidebar e no favicon

@@ -23,7 +23,7 @@ window.CONFIG = {
 
   // Nome do projeto/cliente, usado só como referência em documentação e no
   // nome do Worker sugerido em ia-worker/wrangler.toml (ex.: "nomecliente-ia-insights").
-  PROJECT_NAME: "Novamik - Made In Colors",          // ex.: "Nome do Cliente"
+  PROJECT_NAME: "Noovamik - Made In Colors",          // ex.: "Nome do Cliente"
 
   // Preenchido automaticamente a partir de GITHUB_USERNAME/GITHUB_REPOSITORY
   // acima — é a URL pública que o dashboard terá depois de ativar o Pages.

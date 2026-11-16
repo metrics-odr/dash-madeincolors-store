@@ -17,7 +17,7 @@ from __future__ import annotations
 # Todas as abas ficam na MESMA planilha (mudam só os gids).
 # A planilha precisa estar com o link público em modo "Qualquer pessoa com
 # o link pode visualizar" (o build lê via export CSV, somente leitura).
-SPREADSHEET_ID = ""   # Novamik · Made In Colors
+SPREADSHEET_ID = ""   # Noovamik · Made In Colors
 GID_GA4 = ""    # OBRIGATÓRIO · aba GA4 (Date · Event name · Session source/medium · Event count · Sessions · Total users)
 # Aba Compras: NÃO existe neste cliente. Sem GID_SALES, as compras da Visão Geral vêm do evento `purchase`
 # do GA4 (sem valor => sem Faturamento/ROAS/Ticket). Se um dia houver aba Compras, preencha o gid aqui.

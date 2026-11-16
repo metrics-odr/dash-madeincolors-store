@@ -1,4 +1,4 @@
-# Dashboard de Resultados — Novamik · Made In Colors (Ecommerce)
+# Dashboard de Resultados — Noovamik · Made In Colors (Ecommerce)
 
 Publicado em **https://metrics-odr.github.io/dash-madeincolors-store/** (GitHub Pages), gerado por uma
 engine de BI estática (HTML/CSS/JS + Chart.js) a partir de uma planilha Google (somente leitura):
