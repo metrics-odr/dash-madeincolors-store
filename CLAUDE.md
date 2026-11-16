@@ -40,7 +40,7 @@ aba Compras ou uma coluna de valor de conversão, preencha `GID_SALES` em `build
 build/build.py             # ENGINE: lê CSVs (read-only), emite media[]/ga[]/sales[]/geo[] e costura os arquivos abaixo
 build/config.py            # ⭐ CONFIG DO CLIENTE (gids, moeda, nome, páginas ocultas, metas)
 build/template.html        # esqueleto HTML
-build/identidade-visual.css# ⭐ TODAS as cores (claro/escuro, paleta dos gráficos) — paleta Made In Colors
+build/identidade-visual.css# ⭐ TODAS as cores — paleta do site: preto-carvão, verde-floresta, dourado-bronze, creme
 build/estilos.css          # layout/componentes
 build/app.js               # lógica + renderização (tudo roda no navegador)
 build/logo.png             # logo (embutido na sidebar e no favicon via LOGO_FILE)
