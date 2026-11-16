@@ -715,7 +715,7 @@ def load_geo(rows, ch):
 
 
 def load_google_shop(rows, existing):
-    """Aba Google Shopping/PMax -> linhas do canal `gshop`. A aba traz também campanhas que NÃO são
+    """Aba Google Shopping/PMax -> linhas do canal `google` (grupo "(Shopping/PMax)"). A aba traz também campanhas que NÃO são
     Shopping/PMax (ex.: pesquisa): essas são excluídas (regex GOOGLE_SHOP_PATTERN no nome da campanha), bem
     como campanhas que já vieram da aba geral do Google (`existing`), para não contar o gasto duas vezes."""
     recs, _ = load_media(rows, "google")
@@ -729,9 +729,7 @@ def load_google_shop(rows, existing):
         elif k in have:
             skipped.setdefault(m["camp"], "já existe na aba geral do Google")
         else:
-            m["ch"], m["src"] = "gshop", "google"      # página própria; no GA4/Visão Geral conta como Google Ads
-            m["adset"], m["ad"] = "(Shopping/PMax)", "(sem anúncio)"
-            m.pop("kw", None)                          # a aba Shopping/PMax não tem palavra-chave
+            m["adset"], m["ad"] = "(Shopping/PMax)", "(sem anúncio)"   # soma ao canal Google Ads (página única, como no dash da Maya)
             out.append(m)
     for c, why in skipped.items():
         print(f"  google shop/pmax: ignorada '{c}' ({why})", file=sys.stderr)

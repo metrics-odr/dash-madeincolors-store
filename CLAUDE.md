@@ -22,7 +22,7 @@ Objetivo: o usuário ver a alteração publicada no navegador o quanto antes. Nu
 | Aba | gid | Uso |
 |-----|-----|-----|
 | Google Ads — Campanhas · Grupos · Palavras-chave | 888044421 | página **Google Ads** (Day · Campaign · Ad Group · Ad Name · Cost · Impressions · Clicks · Conversions · Keyword) |
-| Google Ads — Shopping e PMax | 1783811121 | página **Shopping & PMax**. A aba traz também campanhas de pesquisa: **são excluídas** (só entram nomes que casam `GOOGLE_SHOP_PATTERN` e que não estejam na aba geral) |
+| Google Ads — Shopping e PMax | 1783811121 | soma na **mesma página Google Ads** (grupo "(Shopping/PMax)"). A aba traz também campanhas de pesquisa: **são excluídas** (só entram nomes que casam `GOOGLE_SHOP_PATTERN` e que não estejam na aba geral) |
 | Google Ads — Gasto por localização | 1126389235 | seção **Gasto por localização** (País · Região · Cidade) na Visão Geral |
 | GA4 | 1669456740 | funil por sessões (page_view → view_item → add_to_cart → begin_checkout) e **compras** (evento `purchase`) |
 
@@ -31,7 +31,7 @@ evento `purchase` do GA4; compras por campanha/grupo/palavra-chave = coluna Conv
 aba Compras ou uma coluna de valor de conversão, preencha `GID_SALES` em `build/config.py` (o resto se ativa sozinho).
 
 ## Escopo / páginas
-- Sidebar: Visão Geral · Google Ads · Shopping & PMax · Insights de IA.
+- Sidebar: Visão Geral · **Google Ads (visão única, inclui Shopping/PMax)** · Insights de IA.
 - **Meta Ads e TikTok ficam ocultos** (`HIDDEN_PAGES` em `build/config.py`); **nada do backend foi apagado** —
   basta preencher `GID_META` e remover `"meta"` de `HIDDEN_PAGES` para reativar.
 
