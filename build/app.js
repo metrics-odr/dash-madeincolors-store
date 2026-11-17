@@ -375,9 +375,13 @@ const METRIC_COLS=[
   {key:'cpm',label:'CPM',type:'brl'},
   {key:'ctr',label:'CTR',type:'pct'},
   {key:'cr',label:'CR',type:'pct'},
+  {key:'pv',label:'Page Views',type:'int'},
   {key:'pvr',label:'PVR',type:'pct'},
+  {key:'vi',label:'Product Views',type:'int'},
   {key:'acr',label:'ACR',type:'pct'},
-  {key:'vischk',label:'VisCHK',type:'pct'},
+  {key:'atc',label:'AddToCart',type:'int'},
+  {key:'vischk',label:'ICR',type:'pct'},
+  {key:'ck',label:'Checkouts',type:'int'},
   {key:'convchk',label:'ConvCHK',type:'pct'},
   {key:'vendas',label:'Purchases',type:'int',heat:'vendas'}, /* heatmap azul */
   {key:'cac',label:'CAC',type:'brl'},
@@ -409,7 +413,7 @@ const HCOLS=[{key:'dim',label:'',type:'dim',big:true}].concat(OPT_COLS);
 const AD_HCOLS=(()=>{ const by={}; HCOLS.forEach(c=>by[c.key]=c);
   return ['dim','gasto','cpm','ctr','vendas','cac','fat','roas','impr','cliques','cpc','ticket'].map(k=>by[k]); })();
 function metricCells(x,d){
-  return {gasto:d.gasto, impr:x.im, cliques:x.cl, cpm:d.cpm, cpc:d.cpc, hr:d.hr, br:d.br, er:d.er, ctr:d.ctr, cr:d.cr, pvr:d.pvr, acr:d.acr,
+  return {gasto:d.gasto, impr:x.im, cliques:x.cl, cpm:d.cpm, cpc:d.cpc, hr:d.hr, br:d.br, er:d.er, ctr:d.ctr, cr:d.cr, pv:x.pv, vi:x.vi, atc:x.atc, pvr:d.pvr, acr:d.acr,
     vischk:d.vischk, convchk:d.convchk, ck:x.ck, cpic:d.cpic, vendas:x.vendas, cac:d.cac, fat:REV(x.fat), ticket:d.ticket, roas:d.roas};
 }
 function dailyCells(x,d,isTotal){
