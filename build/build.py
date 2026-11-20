@@ -58,6 +58,7 @@ SPREADSHEET_ID = cfg.SPREADSHEET_ID
 # Aba Compras é OPCIONAL: sem ela, as compras da Visão Geral vêm do evento `purchase` do GA4 (sem faturamento)
 GID_SALES = getattr(cfg, "GID_SALES", "") or ""
 GID_GA4 = cfg.GID_GA4
+GID_GA4_CAMP = getattr(cfg, "GID_GA4_CAMP", "")
 # Abas de mídia paga: GID vazio = canal ainda sem planilha ("aguardando")
 GID_META = getattr(cfg, "GID_META", "") or ""
 GID_GOOGLE = getattr(cfg, "GID_GOOGLE", "") or ""
@@ -506,6 +507,38 @@ def load_ga4(rows):
     return sorted(acc.values(), key=lambda r: (r["d"], r["ch"], r["src"]))
 
 
+def load_ga4_camp(rows):
+    """GA4 por campanha (Date · Event name · Session source/medium · Sessions · Session campaign)
+    -> [{d,ch,camp,pv,vi,atc,ck}] só de canais pagos (Session campaign = nome da campanha / utm_campaign)."""
+    if not rows:
+        return []
+    gidx = header_index(
+        rows[0],
+        {"date": ["date", "data", "day"], "event": ["event name", "evento"],
+         "sm": ["session source / medium", "session source/medium", "session manual source / medium",
+                "session source", "source / medium"],
+         "sessions": ["sessions", "sessoes"],
+         "camp": ["session campaign", "session campaign name", "session manual campaign name", "campaign"]},
+        {"date": 0, "event": 1, "sm": 2, "sessions": 4})
+    if gidx["camp"] is None or gidx["sessions"] is None:
+        print("AVISO: aba GA4 - Campanhas sem coluna Session campaign/Sessions; funil por campanha desligado.", file=sys.stderr)
+        return []
+    acc = {}
+    for row in rows[1:]:
+        ev = GA_EVENTS.get(norm(cell(row, gidx["event"])))
+        d = parse_date(cell(row, gidx["date"]))
+        camp = cell(row, gidx["camp"])
+        if not ev or not d or not camp:
+            continue
+        src, med = split_source_medium(cell(row, gidx["sm"]))
+        ch = classify_channel(src, med)
+        if ch == "outros":
+            continue
+        a = acc.setdefault((d, ch, camp), {"d": d, "ch": ch, "camp": camp, "pv": 0.0, "vi": 0.0, "atc": 0.0, "ck": 0.0})
+        a[ev] += to_float(cell(row, gidx["sessions"]))
+    return sorted(acc.values(), key=lambda r: (r["d"], r["ch"], r["camp"]))
+
+
 def load_ga4_sales(rows):
     """Sem aba Compras: usa o evento `purchase` do GA4 (Event count = nº de compras) como "vendas".
     Mesmo formato de load_sales (1 registro por dia x canal x origem). O GA4 não traz valor da compra,
@@ -736,7 +769,7 @@ def load_google_shop(rows, existing):
     return out
 
 
-def process(media_rows, ga_rows, sales_rows, geo_rows=None):
+def process(media_rows, ga_rows, sales_rows, geo_rows=None, gac_rows=None):
     """media_rows = {"meta": rows|None, "google": rows|None, "tiktok": rows|None}"""
     media, ad_links = [], {}
     for ch in ("meta", "google", "tiktok"):
@@ -746,6 +779,7 @@ def process(media_rows, ga_rows, sales_rows, geo_rows=None):
         if ch == "google" and media_rows.get("google_shop"):
             media += load_google_shop(media_rows["google_shop"], recs)
     ga = load_ga4(ga_rows)
+    gac = load_ga4_camp(gac_rows or [])
     if sales_rows:
         sales, buyers, perfil = load_sales(sales_rows, media)
         sales_source = "sheet"
@@ -784,6 +818,7 @@ def process(media_rows, ga_rows, sales_rows, geo_rows=None):
         },
         "media": media,
         "ga": ga,
+        "gac": gac,
         "sales": sales,
         "buyers": buyers,
         "perfil": perfil,
@@ -858,6 +893,7 @@ def main():
     ap.add_argument("--geo-meta-file")
     ap.add_argument("--geo-google-file")
     ap.add_argument("--ga4-file")
+    ap.add_argument("--ga4-camp-file")
     ap.add_argument("--sales-file")
     ap.add_argument("--template", default="build/template.html")
     ap.add_argument("--out", default="dist/index.html")
@@ -871,12 +907,13 @@ def main():
     if GID_GOOGLE_SHOP or args.google_shop_file:
         media_rows["google_shop"] = load_rows(EXPORT_URL.format(sid=SPREADSHEET_ID, gid=GID_GOOGLE_SHOP), args.google_shop_file)
     ga_rows = load_rows(EXPORT_URL.format(sid=SPREADSHEET_ID, gid=GID_GA4), args.ga4_file)
+    gac_rows = load_rows(EXPORT_URL.format(sid=SPREADSHEET_ID, gid=GID_GA4_CAMP), args.ga4_camp_file) if (GID_GA4_CAMP or args.ga4_camp_file) else []
     sales_rows = load_rows(EXPORT_URL.format(sid=SPREADSHEET_ID, gid=GID_SALES), args.sales_file) if (GID_SALES or args.sales_file) else []
     geo_rows = {}
     for ch, local in (("meta", args.geo_meta_file), ("google", args.geo_google_file)):  # gshop não tem aba de local
         gid = GEO_GIDS[ch]
         geo_rows[ch] = load_rows(EXPORT_URL.format(sid=SPREADSHEET_ID, gid=gid), local) if (gid or local) else []
-    data = process(media_rows, ga_rows, sales_rows, geo_rows)
+    data = process(media_rows, ga_rows, sales_rows, geo_rows, gac_rows)
 
     # Briefings do Gestor (texto por IA, gerado 1x/dia pela Routine) — lidos do
     # arquivo versionado ao lado do template. Sem chamada de API no build.
