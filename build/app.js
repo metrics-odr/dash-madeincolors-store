@@ -1,6 +1,6 @@
 "use strict";
 const DATA = JSON.parse(document.getElementById('payload').textContent);
-const MEDIA = DATA.media, GA = DATA.ga, GAC = DATA.gac || [], SALES = DATA.sales, BUYERS = DATA.buyers || [], B = DATA.build;
+const MEDIA = DATA.media, GA = DATA.ga, GAC = DATA.gac || [], GAK = DATA.gak || [], SALES = DATA.sales, BUYERS = DATA.buyers || [], B = DATA.build;
 const TAX = B.tax_factor || 1;
 const MAIN_PRODUCT = B.main_product || 'All products';
 /* Canais: Meta/Google/TikTok = mídia paga (gasto vem das abas de mídia); "outros" = orgânico/
@@ -80,12 +80,12 @@ function derive(a){
     convchk:a.ck?a.vendas/a.ck:null,                        /* ConvCHK = Compras / Checkouts */
     cac:(a.vendas&&g)?g/a.vendas:null, roas:(g&&a.fat)?a.fat/g:null, ticket:(a.vendas&&a.fat)?a.fat/a.vendas:null};
 }
-function buildAgg(fS,fM,dim,fGC){
+function buildAgg(fS,fM,dim,fGC,gdim){
   const m={}; const get=k=>m[k]||(m[k]=newBucket());
   fM.forEach(r=>addMedia(get(r[dim]),r));
   fS.forEach(r=>addSales(get(r[dim]),r));
   /* funil GA4 por campanha: só entra em campanhas que existem na mídia (evita linhas "(not set)" etc.) */
-  (fGC||[]).forEach(r=>{ const b=m[r.camp]; if(b) addGa(b,r); });
+  (fGC||[]).forEach(r=>{ const b=m[r[gdim||'camp']]; if(b) addGa(b,r); });
   return m;
 }
 function totals(fS,fM,fG){
@@ -762,11 +762,12 @@ function renderChannel(){
   if(kwOn){
     const kf=r=>r.ch===ch && dateActive(r.d) && (!STATE.mSelC.size||STATE.mSelC.has(r.camp));
     const kM=MEDIA.filter(kf), kS=mediaSales(kM);
-    const kAgg=buildAgg(kS,kM,'kw');
+    const kG=GAK.filter(r=>r.ch===ch && dateActive(r.d) && (!STATE.mSelC.size||STATE.mSelC.has(r.camp)));
+    const kAgg=buildAgg(kS,kM,'kw',kG,'kw');
     let kRows=Object.entries(kAgg).map(([k,a])=>({k, cells:Object.assign({dim:k}, metricCells(a,derive(a)))}))
       .sort((a,b)=>(b.cells.gasto-a.cells.gasto)||(b.cells.vendas-a.cells.vendas));
     const q=norm(STATE.search.tKw); if(q) kRows=kRows.filter(r=>norm(r.cells.dim).includes(q));
-    renderTable({id:'tKw', cols:HCOLS.map((c,i)=>i===0?{...c,label:'Keyword',big:true}:c), rows:kRows, total:totRowOf(totals(kS,kM)),
+    renderTable({id:'tKw', cols:CAMP_HCOLS.map((c,i)=>i===0?{...c,label:'Keyword',big:true}:c), rows:kRows, total:totRowOf(totals(kS,kM,kG.filter(r=>kAgg[r.kw]))),
       selectable:true, selSet:STATE.mSelKw, onSelect:(k,e)=>selDim('K',k,e&&(e.ctrlKey||e.metaKey))});
     cacDimChart('chKw', kM, kS, 'kw', STATE.mSelKw);
   }
