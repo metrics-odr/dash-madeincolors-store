@@ -1,6 +1,6 @@
 "use strict";
 const DATA = JSON.parse(document.getElementById('payload').textContent);
-const MEDIA = DATA.media, GA = DATA.ga, SALES = DATA.sales, BUYERS = DATA.buyers || [], B = DATA.build;
+const MEDIA = DATA.media, GA = DATA.ga, GAC = DATA.gac || [], SALES = DATA.sales, BUYERS = DATA.buyers || [], B = DATA.build;
 const TAX = B.tax_factor || 1;
 const MAIN_PRODUCT = B.main_product || 'All products';
 /* Canais: Meta/Google/TikTok = mídia paga (gasto vem das abas de mídia); "outros" = orgânico/
@@ -80,10 +80,12 @@ function derive(a){
     convchk:a.ck?a.vendas/a.ck:null,                        /* ConvCHK = Compras / Checkouts */
     cac:(a.vendas&&g)?g/a.vendas:null, roas:(g&&a.fat)?a.fat/g:null, ticket:(a.vendas&&a.fat)?a.fat/a.vendas:null};
 }
-function buildAgg(fS,fM,dim){
+function buildAgg(fS,fM,dim,fGC){
   const m={}; const get=k=>m[k]||(m[k]=newBucket());
   fM.forEach(r=>addMedia(get(r[dim]),r));
   fS.forEach(r=>addSales(get(r[dim]),r));
+  /* funil GA4 por campanha: só entra em campanhas que existem na mídia (evita linhas "(not set)" etc.) */
+  (fGC||[]).forEach(r=>{ const b=m[r.camp]; if(b) addGa(b,r); });
   return m;
 }
 function totals(fS,fM,fG){
@@ -405,6 +407,10 @@ const OPT_COLS=[
   {key:'ticket',label:'Ticket',type:'brl'},
   {key:'roas',label:'ROAS',type:'roas',heat:'roas'},
 ];
+/* Tabela de Campanhas: mídia + funil por campanha (GA4 - Campanhas, via Session campaign = nome da campanha) */
+const CAMP_HCOLS=(()=>{ const by={}; HCOLS_BASE().forEach(c=>by[c.key]=c); METRIC_COLS.forEach(c=>{ if(!by[c.key]) by[c.key]=c; });
+  return ['dim','gasto','impr','cpm','cliques','cpc','ctr','cr','pv','pvr','vi','acr','atc','vischk','ck','convchk','vendas','cac','fat','ticket','roas'].map(k=>by[k]); })();
+function HCOLS_BASE(){ return [{key:'dim',label:'',type:'dim',big:true}].concat(OPT_COLS); }
 const DAILY_COLS=[{key:'date',label:'Date',type:'date'},{key:'wd',label:'Day',type:'dim',w:64}].concat(METRIC_COLS);
 /* Meta Ads: ordem de análise do funil (Checkouts/CPIC depois do ConvCHK, Ticket no fim) */
 const META_DAILY_COLS=(()=>{ const by={}; METRIC_COLS.forEach(c=>by[c.key]=c);
@@ -733,10 +739,10 @@ function renderChannel(){
     if(q) rows=rows.filter(r=>norm(r.cells.dim).includes(q));
     return rows; }
   function totRowOf(tt){const dv=derive(tt);return Object.assign({dim:null}, metricCells(tt,dv));}
-  const Sc=scopeData(ch,'C'), Sa=scopeData(ch,'A'), Sd=scopeData(ch,'D');
+  const Sc=scopeData(ch,'C'), gcOk=r=>dateActive(r.d)&&(ch==='google'||ch==='gshop'?(r.ch==='google'):r.ch===ch), fGC=(ch==='meta'?[]:GAC.filter(gcOk)), Sa=scopeData(ch,'A'), Sd=scopeData(ch,'D');
   const adset=ch==='meta'?'Ad group':'Ad group';
   document.getElementById('adsetTitle').textContent=adset+(ch==='meta'?' (Ad Sets)':'');
-  renderTable({id:'tCamp', cols:HCOLS.map((c,i)=>i===0?{...c,label:'Campaign'}:c), rows:hierRows(buildAgg(Sc.fS,Sc.fM,'camp'),'tCamp'), total:totRowOf(totals(Sc.fS,Sc.fM)),
+  renderTable({id:'tCamp', cols:(ch==='meta'?HCOLS:CAMP_HCOLS).map((c,i)=>i===0?{...c,label:'Campaign'}:c), rows:hierRows(buildAgg(Sc.fS,Sc.fM,'camp',fGC),'tCamp'), total:totRowOf(totals(Sc.fS,Sc.fM,fGC.filter(r=>Sc.fM.some(m=>m.camp===r.camp)))),
     statusMap:latestStatusByDim(mediaAllDates(ch,'C'),'camp','cs'), selectable:true, selSet:STATE.mSelC, onSelect:(k,e)=>selDim('C',k,e&&(e.ctrlKey||e.metaKey))});
   renderTable({id:'tAdset', cols:HCOLS.map((c,i)=>i===0?{...c,label:adset,big:true}:c), rows:hierRows(buildAgg(Sa.fS,Sa.fM,'adset'),'tAdset'), total:totRowOf(totals(Sa.fS,Sa.fM)),
     statusMap:latestStatusByDim(mediaAllDates(ch,'A'),'adset','as'), selectable:true, selSet:STATE.mSelA, onSelect:(k,e)=>selDim('A',k,e&&(e.ctrlKey||e.metaKey))});

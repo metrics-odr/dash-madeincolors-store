@@ -18,6 +18,7 @@ from __future__ import annotations
 # A planilha precisa estar com o link público em modo "Qualquer pessoa com
 # o link pode visualizar" (o build lê via export CSV, somente leitura).
 SPREADSHEET_ID = "1G4j0KJ7Uv3oo_Mvpdqhk7XIL9OecZLtgB2f0syyCndk"   # Noovamik · Made In Colors
+GID_GA4_CAMP = "1764238925"   # aba "GA4 - Campanhas" (Date · Event name · Session source/medium · Event count · Sessions · Total users · Session campaign) — funil por campanha
 GID_GA4 = "1669456740"    # OBRIGATÓRIO · aba GA4 (Date · Event name · Session source/medium · Event count · Sessions · Total users)
 # Aba Compras (1 linha por item: Date · Name · Email · Product · Price · Country · Order ID · utm_*). Compras = Order IDs
 # distintos; Faturamento = soma do Price (€). Se esta aba for esvaziada/removida, cai para o evento `purchase` do GA4.
