@@ -372,7 +372,9 @@ function cacDimChart(id, fM, fS, dim, selSet){
 /* Tabela diária (nível canal/geral): funil completo, vindo do GA4 */
 const METRIC_COLS=[
   {key:'gasto',label:'Spend',type:'brl',heat:'gasto'},   /* heatmap vermelho */
+  {key:'impr',label:'Impressions',type:'int'},
   {key:'cpm',label:'CPM',type:'brl'},
+  {key:'cliques',label:'Clicks',type:'int'},
   {key:'ctr',label:'CTR',type:'pct'},
   {key:'cr',label:'CR',type:'pct'},
   {key:'pv',label:'Page Views',type:'int'},
@@ -407,7 +409,7 @@ const DAILY_COLS=[{key:'date',label:'Date',type:'date'},{key:'wd',label:'Day',ty
 /* Meta Ads: ordem de análise do funil (Checkouts/CPIC depois do ConvCHK, Ticket no fim) */
 const META_DAILY_COLS=(()=>{ const by={}; METRIC_COLS.forEach(c=>by[c.key]=c);
   by.ck={key:'ck',label:'Checkouts',type:'int'}; by.cpic={key:'cpic',label:'CPIC',type:'brl'};
-  return DAILY_COLS.slice(0,2).concat(['gasto','cpm','ctr','cr','pvr','acr','vischk','convchk','ck','cpic','vendas','cac','fat','roas','ticket'].map(k=>by[k])); })();
+  return DAILY_COLS.slice(0,2).concat(['gasto','impr','cpm','cliques','ctr','cr','pvr','acr','vischk','convchk','ck','cpic','vendas','cac','fat','roas','ticket'].map(k=>by[k])); })();
 const HCOLS=[{key:'dim',label:'',type:'dim',big:true}].concat(OPT_COLS);
 /* Só a tabela de Anúncios do Meta: Gasto→CPM→CTR→Compras→CAC→Faturamento→ROAS; Impr., Cliques, CPC e Ticket no fim (sem HR/BR/ER nem funil GA4, que não existem por anúncio) */
 const AD_HCOLS=(()=>{ const by={}; HCOLS.forEach(c=>by[c.key]=c);
